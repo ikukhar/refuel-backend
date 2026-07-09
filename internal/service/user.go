@@ -1,0 +1,43 @@
+package service
+
+import (
+	"context"
+	"errors"
+
+	"github.com/ikukhar/refuel-backend/internal/repository"
+	"gorm.io/gorm"
+)
+
+type UserService struct {
+	userRepo *repository.UserRepository
+}
+
+func NewUserService(userRepo *repository.UserRepository) *UserService {
+	return &UserService{userRepo: userRepo}
+}
+
+func (s *UserService) GetByID(ctx context.Context, id uint) (*UserResponse, error) {
+	user, err := s.userRepo.FindByID(id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("user not found")
+		}
+		return nil, err
+	}
+
+	return &UserResponse{
+		ID:    user.ID,
+		Email: user.Email,
+		Name:  user.Name,
+	}, nil
+}
+
+func (s *UserService) UpdateName(ctx context.Context, id uint, name string) error {
+	user, err := s.userRepo.FindByID(id)
+	if err != nil {
+		return err
+	}
+
+	user.Name = name
+	return s.userRepo.Update(user)
+}

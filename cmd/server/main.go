@@ -1,0 +1,62 @@
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/ikukhar/refuel-backend/internal/config"
+	"github.com/ikukhar/refuel-backend/internal/handler"
+	"github.com/ikukhar/refuel-backend/internal/model"
+	"github.com/ikukhar/refuel-backend/internal/repository"
+	"github.com/ikukhar/refuel-backend/internal/router"
+	"github.com/ikukhar/refuel-backend/internal/service"
+	"github.com/ikukhar/refuel-backend/pkg/jwt"
+	"github.com/rs/zerolog"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	gormLogger "gorm.io/gorm/logger"
+)
+
+func main() {
+	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
+
+	cfg, err := config.Load(".env")
+	if err != nil {
+		logger.Fatal().Err(err).Msg("failed to load config")
+	}
+
+	logLevel, err := zerolog.ParseLevel(cfg.LogLevel)
+	if err != nil {
+		logLevel = zerolog.DebugLevel
+	}
+	zerolog.SetGlobalLevel(logLevel)
+
+	db, err := gorm.Open(postgres.Open(cfg.DSN()), &gorm.Config{
+		Logger: gormLogger.Default.LogMode(gormLogger.Warn),
+	})
+	if err != nil {
+		logger.Fatal().Err(err).Msg("failed to connect to database")
+	}
+
+	if err := db.AutoMigrate(&model.User{}); err != nil {
+		logger.Fatal().Err(err).Msg("failed to run migrations")
+	}
+
+	jwtManager := jwt.NewManager(cfg.JWTSecret, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
+
+	userRepo := repository.NewUserRepository(db)
+
+	authService := service.NewAuthService(userRepo, jwtManager, logger)
+	userService := service.NewUserService(userRepo)
+
+	authHandler := handler.NewAuthHandler(authService)
+	userHandler := handler.NewUserHandler(userService)
+
+	r := router.Setup(logger, jwtManager, authHandler, userHandler)
+
+	addr := fmt.Sprintf(":%d", cfg.AppPort)
+	logger.Info().Str("addr", addr).Msg("starting server")
+	if err := r.Run(addr); err != nil {
+		logger.Fatal().Err(err).Msg("server failed")
+	}
+}
