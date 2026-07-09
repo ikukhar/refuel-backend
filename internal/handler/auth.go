@@ -16,9 +16,11 @@ func NewAuthHandler(authService *service.AuthService) *AuthHandler {
 }
 
 type RegisterRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=6"`
-	Name     string `json:"name" binding:"required"`
+	Email    string   `json:"email" binding:"required,email"`
+	Password string   `json:"password" binding:"required,min=6"`
+	Name     string   `json:"name" binding:"required"`
+	Weight   *float64 `json:"weight,omitempty"`
+	Height   *float64 `json:"height,omitempty"`
 }
 
 type LoginRequest struct {
@@ -33,7 +35,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.authService.Register(c.Request.Context(), req.Email, req.Password, req.Name)
+	resp, err := h.authService.Register(c.Request.Context(), req.Email, req.Password, req.Name, req.Weight, req.Height)
 	if err != nil {
 		c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 		return

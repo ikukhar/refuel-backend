@@ -27,18 +27,22 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+type UpdateProfileRequest struct {
+	Name   *string  `json:"name,omitempty"`
+	Weight *float64 `json:"weight,omitempty"`
+	Height *float64 `json:"height,omitempty"`
+}
+
 func (h *UserHandler) UpdateProfile(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 
-	var req struct {
-		Name string `json:"name" binding:"required"`
-	}
+	var req UpdateProfileRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := h.userService.UpdateName(c.Request.Context(), userID.(uint), req.Name); err != nil {
+	if err := h.userService.UpdateProfile(c.Request.Context(), userID.(uint), req.Name, req.Weight, req.Height); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

@@ -29,12 +29,14 @@ type AuthResponse struct {
 }
 
 type UserResponse struct {
-	ID    uint   `json:"id"`
-	Email string `json:"email"`
-	Name  string `json:"name"`
+	ID     uint     `json:"id"`
+	Email  string   `json:"email"`
+	Name   string   `json:"name"`
+	Weight *float64 `json:"weight"`
+	Height *float64 `json:"height"`
 }
 
-func (s *AuthService) Register(ctx context.Context, email, password, name string) (*AuthResponse, error) {
+func (s *AuthService) Register(ctx context.Context, email, password, name string, weight, height *float64) (*AuthResponse, error) {
 	existing, err := s.userRepo.FindByEmail(email)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
@@ -52,6 +54,8 @@ func (s *AuthService) Register(ctx context.Context, email, password, name string
 		Email:    email,
 		Password: string(hashedPassword),
 		Name:     name,
+		Weight:   weight,
+		Height:   height,
 	}
 
 	if err := s.userRepo.Create(user); err != nil {
@@ -72,9 +76,11 @@ func (s *AuthService) Register(ctx context.Context, email, password, name string
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		User: UserResponse{
-			ID:    user.ID,
-			Email: user.Email,
-			Name:  user.Name,
+			ID:     user.ID,
+			Email:  user.Email,
+			Name:   user.Name,
+			Weight: user.Weight,
+			Height: user.Height,
 		},
 	}, nil
 }
@@ -106,9 +112,11 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*AuthR
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		User: UserResponse{
-			ID:    user.ID,
-			Email: user.Email,
-			Name:  user.Name,
+			ID:     user.ID,
+			Email:  user.Email,
+			Name:   user.Name,
+			Weight: user.Weight,
+			Height: user.Height,
 		},
 	}, nil
 }
@@ -138,9 +146,11 @@ func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (*AuthRe
 		AccessToken:  accessToken,
 		RefreshToken: newRefreshToken,
 		User: UserResponse{
-			ID:    user.ID,
-			Email: user.Email,
-			Name:  user.Name,
+			ID:     user.ID,
+			Email:  user.Email,
+			Name:   user.Name,
+			Weight: user.Weight,
+			Height: user.Height,
 		},
 	}, nil
 }
