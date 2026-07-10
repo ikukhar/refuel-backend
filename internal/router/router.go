@@ -13,6 +13,7 @@ func Setup(
 	jwtManager *jwt.Manager,
 	authHandler *handler.AuthHandler,
 	userHandler *handler.UserHandler,
+	activityHandler *handler.ActivityHandler,
 ) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Recovery())
@@ -32,6 +33,9 @@ func Setup(
 		protected := api.Group("")
 		protected.Use(middleware.AuthRequired(jwtManager))
 		{
+			protected.GET("/activities", activityHandler.List)
+			protected.POST("/activities", activityHandler.Create)
+
 			user := protected.Group("/user")
 			{
 				user.GET("/profile", userHandler.GetProfile)

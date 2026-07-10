@@ -122,6 +122,8 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*AuthR
 }
 
 func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (*AuthResponse, error) {
+	s.logger.Debug().Str("refresh_token", refreshToken).Msg("Refreshing access token")
+	
 	claims, err := s.jwtManager.ValidateToken(refreshToken)
 	if err != nil {
 		return nil, errors.New("invalid or expired refresh token")

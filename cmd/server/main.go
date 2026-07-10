@@ -38,21 +38,24 @@ func main() {
 		logger.Fatal().Err(err).Msg("failed to connect to database")
 	}
 
-	if err := db.AutoMigrate(&model.User{}); err != nil {
+	if err := db.AutoMigrate(&model.User{}, &model.Activity{}); err != nil {
 		logger.Fatal().Err(err).Msg("failed to run migrations")
 	}
 
 	jwtManager := jwt.NewManager(cfg.JWTSecret, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
 
 	userRepo := repository.NewUserRepository(db)
+	activityRepo := repository.NewActivityRepository(db)
 
 	authService := service.NewAuthService(userRepo, jwtManager, logger)
 	userService := service.NewUserService(userRepo)
+	activityService := service.NewActivityService(activityRepo)
 
 	authHandler := handler.NewAuthHandler(authService)
 	userHandler := handler.NewUserHandler(userService)
+	activityHandler := handler.NewActivityHandler(activityService)
 
-	r := router.Setup(logger, jwtManager, authHandler, userHandler)
+	r := router.Setup(logger, jwtManager, authHandler, userHandler, activityHandler)
 
 	addr := fmt.Sprintf(":%d", cfg.AppPort)
 	logger.Info().Str("addr", addr).Msg("starting server")
