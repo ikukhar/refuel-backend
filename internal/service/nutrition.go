@@ -153,6 +153,20 @@ func (s *NutritionService) GetToday(ctx context.Context, userID uint) (*Nutritio
 	return s.buildResponse(baselineCalories, baselineProtein, baselineFat, baselineCarbs, status, now), nil
 }
 
+var validMeals = map[string]bool{"breakfast": true, "lunch": true, "dinner": true}
+
+func (s *NutritionService) GetMeal(ctx context.Context, userID uint, mealType string) (*MealResponse, error) {
+	if !validMeals[mealType] {
+		return nil, fmt.Errorf("invalid meal: %s, allowed: breakfast, lunch, dinner", mealType)
+	}
+
+	meal := s.pickRecipe(mealType)
+	if meal == nil {
+		return nil, fmt.Errorf("no recipes found for %s", mealType)
+	}
+	return meal, nil
+}
+
 func (s *NutritionService) buildResponse(calories float64, protein float64, fat float64, carbs float64, status string, date time.Time) *NutritionResponse {
 	return &NutritionResponse{
 		Date:           date.Format("2006-01-02"),
