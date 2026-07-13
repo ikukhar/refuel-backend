@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{if .Recipe}}Редактировать{{else}}Новый{{end}} рецепт — Refuel Admin</title>
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <style>
+        .macro-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
+        @media (max-width: 768px) { .macro-grid { grid-template-columns: repeat(2, 1fr); } }
+        nav ul li a { cursor: pointer; }
+    </style>
+</head>
+<body hx-boost="true">
+    <nav class="container-fluid">
+        <ul><li><strong>Refuel Admin</strong></li></ul>
+        <ul>
+            <li><a href="/admin/recipes">Рецепты</a></li>
+            <li><a href="/admin/recipes/new">+ Новый</a></li>
+        </ul>
+    </nav>
+    <main class="container">
+        <h1>{{if .Recipe}}Редактировать{{else}}Новый рецепт{{end}}</h1>
+        {{if .Error}}<article style="background: var(--form-element-invalid-border-color); color: white;">{{.Error}}</article>{{end}}
+        <form action="{{if .Recipe}}/admin/recipes/{{.Recipe.ID}}{{else}}/admin/recipes{{end}}" method="post">
+            <div class="grid">
+                <label>Название
+                    <input type="text" name="title" value="{{if .Recipe}}{{.Recipe.Title}}{{end}}" required>
+                </label>
+                <label>Тип приёма
+                    <select name="meal_type" required>
+                        <option value="breakfast" {{if and .Recipe (eq .Recipe.MealType "breakfast")}}selected{{end}}>Завтрак</option>
+                        <option value="lunch" {{if and .Recipe (eq .Recipe.MealType "lunch")}}selected{{end}}>Обед</option>
+                        <option value="dinner" {{if and .Recipe (eq .Recipe.MealType "dinner")}}selected{{end}}>Ужин</option>
+                        <option value="snack" {{if and .Recipe (eq .Recipe.MealType "snack")}}selected{{end}}>Перекус</option>
+                    </select>
+                </label>
+            </div>
+            <label>Описание
+                <textarea name="description" rows="3">{{if .Recipe}}{{.Recipe.Description}}{{end}}</textarea>
+            </label>
+            <div class="macro-grid">
+                <label>Калории <input type="number" name="calories" value="{{if .Recipe}}{{.Recipe.Calories}}{{end}}" required></label>
+                <label>Белки (г) <input type="number" step="0.1" name="protein_g" value="{{if .Recipe}}{{printf "%.1f" .Recipe.ProteinG}}{{end}}" required></label>
+                <label>Жиры (г) <input type="number" step="0.1" name="fat_g" value="{{if .Recipe}}{{printf "%.1f" .Recipe.FatG}}{{end}}" required></label>
+                <label>Углеводы (г) <input type="number" step="0.1" name="carbs_g" value="{{if .Recipe}}{{printf "%.1f" .Recipe.CarbsG}}{{end}}" required></label>
+            </div>
+            <label>URL картинки
+                <input type="url" name="image_url" value="{{if .Recipe}}{{if .Recipe.ImageURL}}{{.Recipe.ImageURL}}{{end}}{{end}}">
+            </label>
+            <label>Ингредиенты (по одному на строке)
+                <textarea name="ingredients" rows="4">{{if .Recipe}}{{range .Recipe.IngredientsLines}}{{.}}
+{{end}}{{end}}</textarea>
+            </label>
+            <label>Шаги приготовления (по одному на строке)
+                <textarea name="steps" rows="4">{{if .Recipe}}{{range .Recipe.StepsLines}}{{.}}
+{{end}}{{end}}</textarea>
+            </label>
+            <div class="grid">
+                <button type="submit">{{if .Recipe}}Сохранить{{else}}Создать{{end}}</button>
+                <a href="/admin/recipes" role="button" class="outline secondary">Отмена</a>
+            </div>
+        </form>
+    </main>
+</body>
+</html>

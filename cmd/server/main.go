@@ -6,6 +6,7 @@ import (
 
 	"github.com/ikukhar/refuel-backend/internal/config"
 	"github.com/ikukhar/refuel-backend/internal/handler"
+	adminHandler "github.com/ikukhar/refuel-backend/internal/handler/admin"
 	"github.com/ikukhar/refuel-backend/internal/model"
 	"github.com/ikukhar/refuel-backend/internal/repository"
 	"github.com/ikukhar/refuel-backend/internal/router"
@@ -38,7 +39,7 @@ func main() {
 		logger.Fatal().Err(err).Msg("failed to connect to database")
 	}
 
-	if err := db.AutoMigrate(&model.User{}, &model.Activity{}); err != nil {
+	if err := db.AutoMigrate(&model.User{}, &model.Activity{}, &model.DailyNutrition{}, &model.Recipe{}); err != nil {
 		logger.Fatal().Err(err).Msg("failed to run migrations")
 	}
 
@@ -46,16 +47,21 @@ func main() {
 
 	userRepo := repository.NewUserRepository(db)
 	activityRepo := repository.NewActivityRepository(db)
+	nutritionRepo := repository.NewNutritionRepository(db)
+	recipeRepo := repository.NewRecipeRepository(db)
 
 	authService := service.NewAuthService(userRepo, jwtManager, logger)
 	userService := service.NewUserService(userRepo)
 	activityService := service.NewActivityService(activityRepo)
+	nutritionService := service.NewNutritionService(nutritionRepo, activityRepo, userRepo, recipeRepo)
 
 	authHandler := handler.NewAuthHandler(authService)
 	userHandler := handler.NewUserHandler(userService)
 	activityHandler := handler.NewActivityHandler(activityService)
+	nutritionHandler := handler.NewNutritionHandler(nutritionService)
+	recipeAdminHandler := adminHandler.NewRecipeAdminHandler(recipeRepo)
 
-	r := router.Setup(logger, jwtManager, authHandler, userHandler, activityHandler)
+	r := router.Setup(logger, jwtManager, authHandler, userHandler, activityHandler, nutritionHandler, recipeAdminHandler)
 
 	addr := fmt.Sprintf(":%d", cfg.AppPort)
 	logger.Info().Str("addr", addr).Msg("starting server")

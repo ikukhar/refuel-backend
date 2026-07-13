@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Рецепты — Refuel Admin</title>
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <style>
+        .actions { display: flex; gap: 0.25rem; }
+        .actions form { display: inline; }
+        nav ul li a { cursor: pointer; }
+    </style>
+</head>
+<body hx-boost="true">
+    <nav class="container-fluid">
+        <ul><li><strong>Refuel Admin</strong></li></ul>
+        <ul>
+            <li><a href="/admin/recipes">Рецепты</a></li>
+            <li><a href="/admin/recipes/new">+ Новый</a></li>
+        </ul>
+    </nav>
+    <main class="container">
+        <h1>Рецепты</h1>
+        <a href="/admin/recipes/new" role="button">+ Добавить рецепт</a>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Название</th>
+                    <th>Тип</th>
+                    <th>Ккал</th>
+                    <th>Б/Ж/У</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Recipes}}
+                <tr>
+                    <td>{{.ID}}</td>
+                    <td>{{.Title}}</td>
+                    <td>{{.MealType}}</td>
+                    <td>{{.Calories}}</td>
+                    <td>{{printf "%.0f" .ProteinG}}/{{printf "%.0f" .FatG}}/{{printf "%.0f" .CarbsG}}</td>
+                    <td class="actions">
+                        <a href="/admin/recipes/{{.ID}}/edit" role="button" class="outline">✎</a>
+                        <form hx-delete="/admin/recipes/{{.ID}}" hx-confirm="Удалить?" hx-target="closest tr" hx-swap="outerHTML">
+                            <button type="submit" class="outline secondary">✕</button>
+                        </form>
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+        {{if not .Recipes}}
+        <p class="secondary">Нет рецептов. <a href="/admin/recipes/new">Создать первый</a></p>
+        {{end}}
+    </main>
+</body>
+</html>

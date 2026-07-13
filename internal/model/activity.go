@@ -90,7 +90,7 @@ type Activity struct {
 	Distance  *float64     `gorm:"default:null" json:"distance"`
 	Duration  *int         `gorm:"default:null" json:"duration"`
 	Elevation *float64     `gorm:"default:null" json:"elevation"`
-	Calories  *float64     `gorm:"default:null" json:"calories"`
+	Calories  *int         `gorm:"default:null" json:"calories"`
 	StartedAt time.Time    `gorm:"not null" json:"started_at"`
 	Source    Source       `gorm:"default:'manual'" json:"source"`
 	SourceID  string       `gorm:"uniqueIndex;not null" json:"source_id"`

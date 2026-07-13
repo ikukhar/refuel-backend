@@ -22,7 +22,7 @@ type CreateActivityInput struct {
 	Distance  *float64  `json:"distance,omitempty"`
 	Duration  *int      `json:"duration,omitempty"`
 	Elevation *float64  `json:"elevation,omitempty"`
-	Calories  *float64  `json:"calories,omitempty"`
+	Calories  *int      `json:"calories,omitempty"`
 	StartedAt time.Time `json:"started_at"`
 	Source    string    `json:"source,omitempty"`
 	SourceID  string    `json:"source_id"`
@@ -35,7 +35,7 @@ type ActivityResponse struct {
 	Distance  *float64 `json:"distance"`
 	Duration  *int     `json:"duration"`
 	Elevation *float64 `json:"elevation"`
-	Calories  *float64 `json:"calories"`
+	Calories  *int     `json:"calories"`
 	StartedAt string   `json:"started_at"`
 	Source    string   `json:"source"`
 	SourceID  string   `json:"source_id"`
