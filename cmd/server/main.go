@@ -39,7 +39,7 @@ func main() {
 		logger.Fatal().Err(err).Msg("failed to connect to database")
 	}
 
-	if err := db.AutoMigrate(&model.User{}, &model.Activity{}, &model.DailyNutrition{}, &model.Recipe{}); err != nil {
+	if err := db.AutoMigrate(&model.User{}, &model.Activity{}, &model.DailyNutrition{}, &model.Recipe{}, &model.UserMealPeriod{}); err != nil {
 		logger.Fatal().Err(err).Msg("failed to run migrations")
 	}
 
@@ -49,6 +49,7 @@ func main() {
 	activityRepo := repository.NewActivityRepository(db)
 	nutritionRepo := repository.NewNutritionRepository(db)
 	recipeRepo := repository.NewRecipeRepository(db)
+	userMealPeriodsRepo := repository.NewUserMealPeriodRepository(db)
 
 	authService := service.NewAuthService(userRepo, jwtManager, logger)
 	userService := service.NewUserService(userRepo)
@@ -60,8 +61,9 @@ func main() {
 	activityHandler := handler.NewActivityHandler(activityService)
 	nutritionHandler := handler.NewNutritionHandler(nutritionService)
 	recipeAdminHandler := adminHandler.NewRecipeAdminHandler(recipeRepo)
+	userMealPeriodsAdminHandler := adminHandler.NewUserMealPeriodAdminHandler(userMealPeriodsRepo)
 
-	r := router.Setup(logger, jwtManager, authHandler, userHandler, activityHandler, nutritionHandler, recipeAdminHandler)
+	r := router.Setup(logger, jwtManager, authHandler, userHandler, activityHandler, nutritionHandler, recipeAdminHandler, userMealPeriodsAdminHandler)
 
 	addr := fmt.Sprintf(":%d", cfg.AppPort)
 	logger.Info().Str("addr", addr).Msg("starting server")

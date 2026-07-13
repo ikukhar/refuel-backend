@@ -67,7 +67,7 @@ func TestNutritionHandler_GetToday_WithMealParam(t *testing.T) {
 	mockRecipe.EXPECT().
 		FindByMealType("lunch").
 		Return([]model.Recipe{
-			{Title: "Суп", MealType: "lunch", Calories: 400, ProteinG: 20, FatG: 10, CarbsG: 40},
+			{Title: "Суп", MealType: model.MealLunch, Calories: 400, ProteinG: 20, FatG: 10, CarbsG: 40},
 		}, nil)
 
 	r := gin.New()

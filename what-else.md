@@ -2,19 +2,17 @@
 
 # Enums from backend
 
-# Specs for backend
++ # Specs for backend
 
 # Роли.
 ### Отображать в приложении нектороый функционал в зависимости от роли
 ### Доступ в админку
 
-# Better UI
++ # Better UI
+### Logo
 
 # AI code-review
 
-
-# Microservice Receipts
-### grpc?
 
 
 # HTTPS for production
@@ -29,3 +27,10 @@
 # Безопасность
 ### Rate limit на auth/login чтобы исключить брут-форс
 ### Https для продакшн
+
+
+# Microservices
+### grpc?
+
+TODO:
+ - Возможно для meal_period нужно просто конкретное время начала

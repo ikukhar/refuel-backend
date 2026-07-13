@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{if .Period}}Редактировать{{else}}Новый{{end}} период — Refuel Admin</title>
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <style>
+        nav ul li a { cursor: pointer; text-decoration: none; }
+    </style>
+</head>
+<body hx-boost="true">
+    <nav class="container-fluid">
+        <ul><li><a href="/admin"><strong>Refuel Admin</strong></a></li></ul>
+        <ul>
+            <li><a href="/admin">Дашборд</a></li>
+            <li><a href="/admin/recipes">Рецепты</a></li>
+            <li><a href="/admin/user-meal-periods">Периоды приёма</a></li>
+            <li><a href="/admin/user-meal-periods/new">+ Новый период</a></li>
+        </ul>
+    </nav>
+    <main class="container">
+        <h1>{{if .Period}}Редактировать{{else}}Новый{{end}} период приёма</h1>
+        {{if .Error}}<article style="background: var(--form-element-invalid-border-color); color: white;">{{.Error}}</article>{{end}}
+        <form action="{{if .Period}}/admin/user-meal-periods/{{.Period.ID}}{{else}}/admin/user-meal-periods{{end}}" method="post">
+            <label>User ID
+                <input type="number" name="user_id" value="{{if .Period}}{{.Period.UserID}}{{else}}0{{end}}" required>
+            </label>
+            <label>Тип приёма
+                <select name="meal_type" required>
+                    {{range $m := .DefaultMeals}}
+                    <option value="{{$m.MealType}}" {{if and $.Period (eq $.Period.MealType $m.MealType)}}selected{{end}}>{{$m.Name}}</option>
+                    {{end}}
+                </select>
+            </label>
+            <label>Начало
+                <div style="display:flex;gap:0.5rem">
+                    <input type="number" name="start_hour" min="0" max="23" value="{{if .Period}}{{.Period.StartHour}}{{end}}" placeholder="чч" required>
+                    <input type="number" name="start_minute" min="0" max="59" value="{{if .Period}}{{.Period.StartMinute}}{{end}}" placeholder="мм">
+                </div>
+            </label>
+            <label>Конец
+                <div style="display:flex;gap:0.5rem">
+                    <input type="number" name="end_hour" min="0" max="23" value="{{if .Period}}{{.Period.EndHour}}{{end}}" placeholder="чч" required>
+                    <input type="number" name="end_minute" min="0" max="59" value="{{if .Period}}{{.Period.EndMinute}}{{end}}" placeholder="мм">
+                </div>
+            </label>
+            <div class="grid">
+                <button type="submit">{{if .Period}}Сохранить{{else}}Создать{{end}}</button>
+                <a href="/admin/user-meal-periods" role="button" class="outline secondary">Отмена</a>
+            </div>
+        </form>
+    </main>
+</body>
+</html>

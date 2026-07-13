@@ -64,8 +64,9 @@ func setupAPI(t *testing.T) *apiSuite {
 	activityH := handler.NewActivityHandler(activitySvc)
 	nutritionH := handler.NewNutritionHandler(nutritionSvc)
 	recipeAdminH := adminHandler.NewRecipeAdminHandler(nil)
+	userMealPeriodsAdminH := adminHandler.NewUserMealPeriodAdminHandler(nil)
 
-	r := router.Setup(logger, jwtManager, authH, userH, activityH, nutritionH, recipeAdminH)
+	r := router.Setup(logger, jwtManager, authH, userH, activityH, nutritionH, recipeAdminH, userMealPeriodsAdminH)
 
 	return &apiSuite{
 		r:          r,
@@ -459,7 +460,7 @@ func TestGetNutrition_FullDay(t *testing.T) {
 		s.mockRecipe.EXPECT().
 			FindByMealType(meal).
 			Return([]model.Recipe{
-				{Title: "Meal " + meal, MealType: meal, Calories: 400, ProteinG: 20, FatG: 10, CarbsG: 50},
+				{Title: "Meal " + meal, MealType: model.MealType(meal), Calories: 400, ProteinG: 20, FatG: 10, CarbsG: 50},
 			}, nil)
 	}
 
@@ -485,7 +486,7 @@ func TestGetNutrition_WithMeal(t *testing.T) {
 	s.mockRecipe.EXPECT().
 		FindByMealType("lunch").
 		Return([]model.Recipe{
-			{Title: "Chicken Salad", MealType: "lunch", Calories: 500, ProteinG: 35, FatG: 15, CarbsG: 30},
+			{Title: "Chicken Salad", MealType: model.MealLunch, Calories: 500, ProteinG: 35, FatG: 15, CarbsG: 30},
 		}, nil)
 
 	w := httptest.NewRecorder()

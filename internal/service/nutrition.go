@@ -52,35 +52,28 @@ type NutritionResponse struct {
 }
 
 type mealSlot struct {
-	mealType string
-	minHour  int
-	maxHour  int
-	minMin   int
+	minHour int
+	maxHour int
+	minMin  int
 }
 
-var mealSlots = map[string]mealSlot{
-	"breakfast": {mealType: "breakfast", minHour: 7, maxHour: 9, minMin: 0},
-	"lunch":     {mealType: "lunch", minHour: 12, maxHour: 14, minMin: 0},
-	"dinner":    {mealType: "dinner", minHour: 17, maxHour: 20, minMin: 0},
+var defaultMealSlots = map[model.MealType]mealSlot{
+	model.MealBreakfast: {minHour: 7, maxHour: 9, minMin: 0},
+	model.MealLunch:     {minHour: 12, maxHour: 14, minMin: 0},
+	model.MealDinner:    {minHour: 17, maxHour: 20, minMin: 0},
 }
 
-func randomTime(slot mealSlot) string {
-	h := slot.minHour + rand.Intn(slot.maxHour-slot.minHour+1)
-	m := slot.minMin + rand.Intn(4)*15
-	if m >= 60 {
-		m = 0
-	}
-	return fmt.Sprintf("%d:%02d", h, m)
-}
-
-func (s *NutritionService) pickRecipe(mealType string) *MealResponse {
-	recipes, err := s.recipeRepo.FindByMealType(mealType)
+func (s *NutritionService) pickRecipe(mealType model.MealType) *MealResponse {
+	recipes, err := s.recipeRepo.FindByMealType(string(mealType))
 	if err != nil || len(recipes) == 0 {
 		return nil
 	}
 
 	r := recipes[rand.Intn(len(recipes))]
-	slot := mealSlots[mealType]
+	slot, ok := defaultMealSlots[mealType]
+	if !ok {
+		return nil
+	}
 
 	return &MealResponse{
 		Time:     randomTime(slot),
@@ -90,6 +83,15 @@ func (s *NutritionService) pickRecipe(mealType string) *MealResponse {
 		Fat:      r.FatG,
 		Carbs:    r.CarbsG,
 	}
+}
+
+func randomTime(slot mealSlot) string {
+	h := slot.minHour + rand.Intn(slot.maxHour-slot.minHour+1)
+	m := slot.minMin + rand.Intn(4)*15
+	if m >= 60 {
+		m = 0
+	}
+	return fmt.Sprintf("%d:%02d", h, m)
 }
 
 func (s *NutritionService) GetToday(ctx context.Context, userID uint) (*NutritionResponse, error) {
@@ -152,14 +154,19 @@ func (s *NutritionService) GetToday(ctx context.Context, userID uint) (*Nutritio
 	return s.buildResponse(baselineCalories, baselineProtein, baselineFat, baselineCarbs, status, now), nil
 }
 
-var validMeals = map[string]bool{"breakfast": true, "lunch": true, "dinner": true}
+var validMeals = map[model.MealType]bool{
+	model.MealBreakfast: true,
+	model.MealLunch:     true,
+	model.MealDinner:    true,
+}
 
 func (s *NutritionService) GetMeal(ctx context.Context, userID uint, mealType string) (*MealResponse, error) {
-	if !validMeals[mealType] {
+	mt := model.MealType(mealType)
+	if !validMeals[mt] {
 		return nil, fmt.Errorf("invalid meal: %s, allowed: breakfast, lunch, dinner", mealType)
 	}
 
-	meal := s.pickRecipe(mealType)
+	meal := s.pickRecipe(mt)
 	if meal == nil {
 		return nil, fmt.Errorf("no recipes found for %s", mealType)
 	}
@@ -174,8 +181,8 @@ func (s *NutritionService) buildResponse(calories float64, protein float64, fat 
 		FatG:           fat,
 		CarbsG:         carbs,
 		Status:         status,
-		Breakfast:      s.pickRecipe("breakfast"),
-		Lunch:          s.pickRecipe("lunch"),
-		Dinner:         s.pickRecipe("dinner"),
+		Breakfast:      s.pickRecipe(model.MealBreakfast),
+		Lunch:          s.pickRecipe(model.MealLunch),
+		Dinner:         s.pickRecipe(model.MealDinner),
 	}
 }

@@ -44,11 +44,11 @@ func TestNutritionService_GetToday_CreatesBaseline(t *testing.T) {
 
 	mockRecipeRepo.EXPECT().
 		FindByMealType("breakfast").
-		Return([]model.Recipe{{Title: "Каша", MealType: "breakfast", Calories: 300, ProteinG: 10, FatG: 5, CarbsG: 50}}, nil)
+		Return([]model.Recipe{{Title: "Каша", MealType: model.MealBreakfast, Calories: 300, ProteinG: 10, FatG: 5, CarbsG: 50}}, nil)
 
 	mockRecipeRepo.EXPECT().
 		FindByMealType("lunch").
-		Return([]model.Recipe{{Title: "Суп", MealType: "lunch", Calories: 400, ProteinG: 20, FatG: 10, CarbsG: 40}}, nil)
+		Return([]model.Recipe{{Title: "Суп", MealType: model.MealLunch, Calories: 400, ProteinG: 20, FatG: 10, CarbsG: 40}}, nil)
 
 	mockRecipeRepo.EXPECT().
 		FindByMealType("dinner").
@@ -124,7 +124,7 @@ func TestNutritionService_GetMeal_Valid(t *testing.T) {
 
 	mockRecipeRepo.EXPECT().
 		FindByMealType("breakfast").
-		Return([]model.Recipe{{Title: "Омлет", MealType: "breakfast", Calories: 250, ProteinG: 18, FatG: 15, CarbsG: 5}}, nil)
+		Return([]model.Recipe{{Title: "Омлет", MealType: model.MealBreakfast, Calories: 250, ProteinG: 18, FatG: 15, CarbsG: 5}}, nil)
 
 	meal, err := svc.GetMeal(context.Background(), 1, "breakfast")
 

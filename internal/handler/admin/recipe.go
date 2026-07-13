@@ -20,6 +20,7 @@ func NewRecipeAdminHandler(recipeRepo *repository.RecipeRepository) *RecipeAdmin
 
 type recipeView struct {
 	model.Recipe
+	MealTypeName     string
 	IngredientsLines []string
 	StepsLines       []string
 }
@@ -27,6 +28,7 @@ type recipeView struct {
 func toView(r *model.Recipe) recipeView {
 	return recipeView{
 		Recipe:           *r,
+		MealTypeName:     model.MealTypeName(r.MealType),
 		IngredientsLines: parseJSONList(r.Ingredients),
 		StepsLines:       parseJSONList(r.Steps),
 	}
@@ -73,13 +75,15 @@ func (h *RecipeAdminHandler) List(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "list.html", gin.H{
-		"Recipes": toViews(recipes),
+		"Recipes":       toViews(recipes),
+		"DefaultMeals": model.DefaultMealPeriods,
 	})
 }
 
 func (h *RecipeAdminHandler) NewForm(c *gin.Context) {
 	c.HTML(http.StatusOK, "form.html", gin.H{
-		"Recipe": nil,
+		"Recipe":        nil,
+		"DefaultMeals": model.DefaultMealPeriods,
 	})
 }
 
@@ -87,16 +91,18 @@ func (h *RecipeAdminHandler) Create(c *gin.Context) {
 	recipe, errMsg := parseRecipeForm(c)
 	if errMsg != "" {
 		c.HTML(http.StatusUnprocessableEntity, "form.html", gin.H{
-			"Recipe": nil,
-			"Error":  errMsg,
+			"Recipe":        nil,
+			"DefaultMeals": model.DefaultMealPeriods,
+			"Error":         errMsg,
 		})
 		return
 	}
 
 	if err := h.recipeRepo.Create(recipe); err != nil {
 		c.HTML(http.StatusUnprocessableEntity, "form.html", gin.H{
-			"Recipe": nil,
-			"Error":  err.Error(),
+			"Recipe":        nil,
+			"DefaultMeals": model.DefaultMealPeriods,
+			"Error":         err.Error(),
 		})
 		return
 	}
@@ -113,7 +119,8 @@ func (h *RecipeAdminHandler) EditForm(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "form.html", gin.H{
-		"Recipe": toView(recipe),
+		"Recipe":        toView(recipe),
+		"DefaultMeals": model.DefaultMealPeriods,
 	})
 }
 
@@ -129,8 +136,9 @@ func (h *RecipeAdminHandler) Update(c *gin.Context) {
 	recipe, errMsg := parseRecipeForm(c)
 	if errMsg != "" {
 		c.HTML(http.StatusUnprocessableEntity, "form.html", gin.H{
-			"Recipe": toView(existing),
-			"Error":  errMsg,
+			"Recipe":        toView(existing),
+			"DefaultMeals": model.DefaultMealPeriods,
+			"Error":         errMsg,
 		})
 		return
 	}
@@ -212,7 +220,7 @@ func parseRecipeForm(c *gin.Context) (*model.Recipe, string) {
 		FatG:        fat,
 		CarbsG:      carbs,
 		ImageURL:    imageURLPtr,
-		MealType:    c.PostForm("meal_type"),
+		MealType:    model.MealType(c.PostForm("meal_type")),
 		Steps:       toJSONList(getFormLines(c, "steps")),
 		Ingredients: toJSONList(getFormLines(c, "ingredients")),
 	}, ""

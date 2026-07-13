@@ -11,7 +11,7 @@ type Recipe struct {
 	FatG        float64   `gorm:"not null" json:"fat_g"`
 	CarbsG      float64   `gorm:"not null" json:"carbs_g"`
 	ImageURL    *string   `gorm:"default:null" json:"image_url"`
-	MealType    string    `gorm:"not null;default:'other'" json:"meal_type"`
+	MealType    MealType  `gorm:"not null" json:"meal_type"`
 	Steps       string    `gorm:"type:text" json:"steps"`
 	Ingredients string    `gorm:"type:text" json:"ingredients"`
 	CreatedAt   time.Time `json:"created_at"`

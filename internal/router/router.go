@@ -1,6 +1,9 @@
 package router
 
 import (
+	"html/template"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/ikukhar/refuel-backend/internal/handler"
 	adminHandler "github.com/ikukhar/refuel-backend/internal/handler/admin"
@@ -17,12 +20,15 @@ func Setup(
 	activityHandler *handler.ActivityHandler,
 	nutritionHandler *handler.NutritionHandler,
 	recipeAdminHandler *adminHandler.RecipeAdminHandler,
+	userMealPeriodsAdminHandler *adminHandler.UserMealPeriodAdminHandler,
 ) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.Use(middleware.Logger(logger))
 
-	r.LoadHTMLGlob("templates/admin/*/*.html")
+	tmpl := template.Must(template.New("").ParseGlob("templates/admin/*.html"))
+	template.Must(tmpl.ParseGlob("templates/admin/*/*.html"))
+	r.SetHTMLTemplate(tmpl)
 
 	api := r.Group("/api/v1")
 	{
@@ -53,13 +59,25 @@ func Setup(
 
 	admin := r.Group("/admin")
 	{
+		admin.GET("/", dashboard)
 		admin.GET("/recipes", recipeAdminHandler.List)
 		admin.GET("/recipes/new", recipeAdminHandler.NewForm)
 		admin.POST("/recipes", recipeAdminHandler.Create)
 		admin.GET("/recipes/:id/edit", recipeAdminHandler.EditForm)
 		admin.POST("/recipes/:id", recipeAdminHandler.Update)
 		admin.DELETE("/recipes/:id", recipeAdminHandler.Delete)
+
+		admin.GET("/user-meal-periods", userMealPeriodsAdminHandler.List)
+		admin.GET("/user-meal-periods/new", userMealPeriodsAdminHandler.NewForm)
+		admin.POST("/user-meal-periods", userMealPeriodsAdminHandler.Create)
+		admin.GET("/user-meal-periods/:id/edit", userMealPeriodsAdminHandler.EditForm)
+		admin.POST("/user-meal-periods/:id", userMealPeriodsAdminHandler.Update)
+		admin.DELETE("/user-meal-periods/:id", userMealPeriodsAdminHandler.Delete)
 	}
 
 	return r
+}
+
+func dashboard(c *gin.Context) {
+	c.HTML(http.StatusOK, "dashboard.html", nil)
 }

@@ -9,14 +9,16 @@
     <style>
         .macro-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
         @media (max-width: 768px) { .macro-grid { grid-template-columns: repeat(2, 1fr); } }
-        nav ul li a { cursor: pointer; }
+        nav ul li a { cursor: pointer; text-decoration: none; }
     </style>
 </head>
 <body hx-boost="true">
     <nav class="container-fluid">
-        <ul><li><strong>Refuel Admin</strong></li></ul>
+        <ul><li><a href="/admin"><strong>Refuel Admin</strong></a></li></ul>
         <ul>
+            <li><a href="/admin">Дашборд</a></li>
             <li><a href="/admin/recipes">Рецепты</a></li>
+            <li><a href="/admin/user-meal-periods">Периоды приёма</a></li>
             <li><a href="/admin/recipes/new">+ Новый</a></li>
         </ul>
     </nav>
@@ -30,10 +32,9 @@
                 </label>
                 <label>Тип приёма
                     <select name="meal_type" required>
-                        <option value="breakfast" {{if and .Recipe (eq .Recipe.MealType "breakfast")}}selected{{end}}>Завтрак</option>
-                        <option value="lunch" {{if and .Recipe (eq .Recipe.MealType "lunch")}}selected{{end}}>Обед</option>
-                        <option value="dinner" {{if and .Recipe (eq .Recipe.MealType "dinner")}}selected{{end}}>Ужин</option>
-                        <option value="snack" {{if and .Recipe (eq .Recipe.MealType "snack")}}selected{{end}}>Перекус</option>
+                        {{range $m := .DefaultMeals}}
+                        <option value="{{$m.MealType}}" {{if and $.Recipe (eq $.Recipe.MealType $m.MealType)}}selected{{end}}>{{$m.Name}}</option>
+                        {{end}}
                     </select>
                 </label>
             </div>

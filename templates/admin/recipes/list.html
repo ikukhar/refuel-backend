@@ -9,14 +9,16 @@
     <style>
         .actions { display: flex; gap: 0.25rem; }
         .actions form { display: inline; }
-        nav ul li a { cursor: pointer; }
+        nav ul li a { cursor: pointer; text-decoration: none; }
     </style>
 </head>
 <body hx-boost="true">
     <nav class="container-fluid">
-        <ul><li><strong>Refuel Admin</strong></li></ul>
+        <ul><li><a href="/admin"><strong>Refuel Admin</strong></a></li></ul>
         <ul>
+            <li><a href="/admin">Дашборд</a></li>
             <li><a href="/admin/recipes">Рецепты</a></li>
+            <li><a href="/admin/user-meal-periods">Периоды приёма</a></li>
             <li><a href="/admin/recipes/new">+ Новый</a></li>
         </ul>
     </nav>
@@ -39,7 +41,7 @@
                 <tr>
                     <td>{{.ID}}</td>
                     <td>{{.Title}}</td>
-                    <td>{{.MealType}}</td>
+                    <td>{{.MealTypeName}}</td>
                     <td>{{.Calories}}</td>
                     <td>{{printf "%.0f" .ProteinG}}/{{printf "%.0f" .FatG}}/{{printf "%.0f" .CarbsG}}</td>
                     <td class="actions">
