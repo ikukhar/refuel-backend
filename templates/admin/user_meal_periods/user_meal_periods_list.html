@@ -29,8 +29,7 @@
                 <tr>
                     <th>Тип</th>
                     <th>Название</th>
-                    <th>Начало</th>
-                    <th>Конец</th>
+                    <th>Время</th>
                 </tr>
             </thead>
             <tbody>
@@ -39,7 +38,6 @@
                     <td>{{.MealType}}</td>
                     <td>{{.Name}}</td>
                     <td>{{printf "%02d:%02d" .StartHour .StartMinute}}</td>
-                    <td>{{printf "%02d:%02d" .EndHour .EndMinute}}</td>
                 </tr>
                 {{end}}
             </tbody>
@@ -53,8 +51,7 @@
                     <th>ID</th>
                     <th>User ID</th>
                     <th>Тип</th>
-                    <th>Начало</th>
-                    <th>Конец</th>
+                    <th>Время</th>
                     <th></th>
                 </tr>
             </thead>
@@ -65,7 +62,6 @@
                     <td>{{.UserID}}</td>
                     <td>{{.MealType}}</td>
                     <td>{{printf "%02d:%02d" .StartHour .StartMinute}}</td>
-                    <td>{{printf "%02d:%02d" .EndHour .EndMinute}}</td>
                     <td class="actions">
                         <a href="/admin/user-meal-periods/{{.ID}}/edit" role="button" class="outline">✎</a>
                         <form hx-delete="/admin/user-meal-periods/{{.ID}}" hx-confirm="Удалить?" hx-target="closest tr" hx-swap="outerHTML">

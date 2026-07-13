@@ -34,16 +34,10 @@
                     {{end}}
                 </select>
             </label>
-            <label>Начало
+            <label>Время начала
                 <div style="display:flex;gap:0.5rem">
                     <input type="number" name="start_hour" min="0" max="23" value="{{if .Period}}{{.Period.StartHour}}{{end}}" placeholder="чч" required>
                     <input type="number" name="start_minute" min="0" max="59" value="{{if .Period}}{{.Period.StartMinute}}{{end}}" placeholder="мм">
-                </div>
-            </label>
-            <label>Конец
-                <div style="display:flex;gap:0.5rem">
-                    <input type="number" name="end_hour" min="0" max="23" value="{{if .Period}}{{.Period.EndHour}}{{end}}" placeholder="чч" required>
-                    <input type="number" name="end_minute" min="0" max="59" value="{{if .Period}}{{.Period.EndMinute}}{{end}}" placeholder="мм">
                 </div>
             </label>
             <div class="grid">

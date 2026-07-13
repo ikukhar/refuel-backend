@@ -117,15 +117,11 @@ func parseUserMealPeriodForm(c *gin.Context) (*model.UserMealPeriod, string) {
 
 	startHour, _ := strconv.Atoi(c.PostForm("start_hour"))
 	startMinute, _ := strconv.Atoi(c.DefaultPostForm("start_minute", "0"))
-	endHour, _ := strconv.Atoi(c.PostForm("end_hour"))
-	endMinute, _ := strconv.Atoi(c.DefaultPostForm("end_minute", "0"))
 
 	return &model.UserMealPeriod{
 		UserID:      uint(userID),
 		MealType:    model.MealType(mealType),
 		StartHour:   startHour,
 		StartMinute: startMinute,
-		EndHour:     endHour,
-		EndMinute:   endMinute,
 	}, ""
 }
