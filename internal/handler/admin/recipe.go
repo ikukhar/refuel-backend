@@ -20,7 +20,6 @@ func NewRecipeAdminHandler(recipeRepo *repository.RecipeRepository) *RecipeAdmin
 
 type recipeView struct {
 	model.Recipe
-	MealTypeName     string
 	IngredientsLines []string
 	StepsLines       []string
 }
@@ -28,7 +27,6 @@ type recipeView struct {
 func toView(r *model.Recipe) recipeView {
 	return recipeView{
 		Recipe:           *r,
-		MealTypeName:     model.MealTypeName(r.MealType),
 		IngredientsLines: parseJSONList(r.Ingredients),
 		StepsLines:       parseJSONList(r.Steps),
 	}
@@ -75,15 +73,14 @@ func (h *RecipeAdminHandler) List(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "list.html", gin.H{
-		"Recipes":       toViews(recipes),
-		"DefaultMeals": model.DefaultMealPeriods,
+		"Recipes": toViews(recipes),
 	})
 }
 
 func (h *RecipeAdminHandler) NewForm(c *gin.Context) {
 	c.HTML(http.StatusOK, "form.html", gin.H{
-		"Recipe":        nil,
-		"DefaultMeals": model.DefaultMealPeriods,
+		"Recipe":    nil,
+		"MealTypes": model.ValidMealTypes(),
 	})
 }
 
@@ -91,18 +88,18 @@ func (h *RecipeAdminHandler) Create(c *gin.Context) {
 	recipe, errMsg := parseRecipeForm(c)
 	if errMsg != "" {
 		c.HTML(http.StatusUnprocessableEntity, "form.html", gin.H{
-			"Recipe":        nil,
-			"DefaultMeals": model.DefaultMealPeriods,
-			"Error":         errMsg,
+			"Recipe":    nil,
+			"MealTypes": model.ValidMealTypes(),
+			"Error":     errMsg,
 		})
 		return
 	}
 
 	if err := h.recipeRepo.Create(recipe); err != nil {
 		c.HTML(http.StatusUnprocessableEntity, "form.html", gin.H{
-			"Recipe":        nil,
-			"DefaultMeals": model.DefaultMealPeriods,
-			"Error":         err.Error(),
+			"Recipe":    nil,
+			"MealTypes": model.ValidMealTypes(),
+			"Error":     err.Error(),
 		})
 		return
 	}
@@ -119,8 +116,8 @@ func (h *RecipeAdminHandler) EditForm(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "form.html", gin.H{
-		"Recipe":        toView(recipe),
-		"DefaultMeals": model.DefaultMealPeriods,
+		"Recipe":    toView(recipe),
+		"MealTypes": model.ValidMealTypes(),
 	})
 }
 
@@ -136,9 +133,9 @@ func (h *RecipeAdminHandler) Update(c *gin.Context) {
 	recipe, errMsg := parseRecipeForm(c)
 	if errMsg != "" {
 		c.HTML(http.StatusUnprocessableEntity, "form.html", gin.H{
-			"Recipe":        toView(existing),
-			"DefaultMeals": model.DefaultMealPeriods,
-			"Error":         errMsg,
+			"Recipe":    toView(existing),
+			"MealTypes": model.ValidMealTypes(),
+			"Error":     errMsg,
 		})
 		return
 	}

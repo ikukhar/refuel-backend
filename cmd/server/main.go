@@ -43,12 +43,16 @@ func main() {
 		logger.Fatal().Err(err).Msg("failed to run migrations")
 	}
 
+	recipeRepo := repository.NewRecipeRepository(db)
+	if err := recipeRepo.SeedRecipes(); err != nil {
+		logger.Fatal().Err(err).Msg("failed to seed recipes")
+	}
+
 	jwtManager := jwt.NewManager(cfg.JWTSecret, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
 
 	userRepo := repository.NewUserRepository(db)
 	activityRepo := repository.NewActivityRepository(db)
 	nutritionRepo := repository.NewNutritionRepository(db)
-	recipeRepo := repository.NewRecipeRepository(db)
 	userMealPeriodsRepo := repository.NewUserMealPeriodRepository(db)
 
 	authService := service.NewAuthService(userRepo, jwtManager, logger)

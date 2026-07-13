@@ -9,6 +9,20 @@ const (
 	MealSnack     MealType = "snack"
 )
 
+func (m MealType) Name() string {
+	switch m {
+	case MealBreakfast:
+		return "Завтрак"
+	case MealLunch:
+		return "Обед"
+	case MealDinner:
+		return "Ужин"
+	case MealSnack:
+		return "Перекус"
+	}
+	return string(m)
+}
+
 func ValidMealTypes() []MealType {
 	return []MealType{MealBreakfast, MealLunch, MealDinner, MealSnack}
 }

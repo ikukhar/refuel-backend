@@ -1,14 +1,5 @@
 package model
 
-func MealTypeName(mt MealType) string {
-	for _, p := range DefaultMealPeriods {
-		if p.MealType == mt {
-			return p.Name
-		}
-	}
-	return string(mt)
-}
-
 type MealPeriod struct {
 	MealType    MealType
 	Name        string

@@ -32,8 +32,8 @@
                 </label>
                 <label>Тип приёма
                     <select name="meal_type" required>
-                        {{range $m := .DefaultMeals}}
-                        <option value="{{$m.MealType}}" {{if and $.Recipe (eq $.Recipe.MealType $m.MealType)}}selected{{end}}>{{$m.Name}}</option>
+                        {{range $mt := .MealTypes}}
+                        <option value="{{$mt}}" {{if and $.Recipe (eq $.Recipe.MealType $mt)}}selected{{end}}>{{$mt.Name}}</option>
                         {{end}}
                     </select>
                 </label>
