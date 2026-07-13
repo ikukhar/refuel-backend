@@ -4,15 +4,14 @@ import (
 	"context"
 	"errors"
 
-	"github.com/ikukhar/refuel-backend/internal/repository"
 	"gorm.io/gorm"
 )
 
 type UserService struct {
-	userRepo *repository.UserRepository
+	userRepo UserRepository
 }
 
-func NewUserService(userRepo *repository.UserRepository) *UserService {
+func NewUserService(userRepo UserRepository) *UserService {
 	return &UserService{userRepo: userRepo}
 }
 

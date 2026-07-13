@@ -6,14 +6,13 @@ import (
 	"fmt"
 
 	"github.com/ikukhar/refuel-backend/internal/model"
-	"github.com/ikukhar/refuel-backend/internal/repository"
 )
 
 type RecipeService struct {
-	repo *repository.RecipeRepository
+	repo RecipeRepository
 }
 
-func NewRecipeService(repo *repository.RecipeRepository) *RecipeService {
+func NewRecipeService(repo RecipeRepository) *RecipeService {
 	return &RecipeService{repo: repo}
 }
 

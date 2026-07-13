@@ -6,14 +6,13 @@ import (
 	"time"
 
 	"github.com/ikukhar/refuel-backend/internal/model"
-	"github.com/ikukhar/refuel-backend/internal/repository"
 )
 
 type ActivityService struct {
-	repo *repository.ActivityRepository
+	repo ActivityRepository
 }
 
-func NewActivityService(repo *repository.ActivityRepository) *ActivityService {
+func NewActivityService(repo ActivityRepository) *ActivityService {
 	return &ActivityService{repo: repo}
 }
 

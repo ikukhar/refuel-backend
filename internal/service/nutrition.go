@@ -7,21 +7,20 @@ import (
 	"time"
 
 	"github.com/ikukhar/refuel-backend/internal/model"
-	"github.com/ikukhar/refuel-backend/internal/repository"
 )
 
 type NutritionService struct {
-	nutritionRepo *repository.NutritionRepository
-	activityRepo  *repository.ActivityRepository
-	userRepo      *repository.UserRepository
-	recipeRepo    *repository.RecipeRepository
+	nutritionRepo NutritionRepository
+	activityRepo  ActivityRepository
+	userRepo      UserRepository
+	recipeRepo    RecipeRepository
 }
 
 func NewNutritionService(
-	nutritionRepo *repository.NutritionRepository,
-	activityRepo *repository.ActivityRepository,
-	userRepo *repository.UserRepository,
-	recipeRepo *repository.RecipeRepository,
+	nutritionRepo NutritionRepository,
+	activityRepo ActivityRepository,
+	userRepo UserRepository,
+	recipeRepo RecipeRepository,
 ) *NutritionService {
 	return &NutritionService{
 		nutritionRepo: nutritionRepo,

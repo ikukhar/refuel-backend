@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/ikukhar/refuel-backend/internal/model"
-	"github.com/ikukhar/refuel-backend/internal/repository"
 	"github.com/ikukhar/refuel-backend/pkg/jwt"
 	"github.com/rs/zerolog"
 	"golang.org/x/crypto/bcrypt"
@@ -13,12 +12,12 @@ import (
 )
 
 type AuthService struct {
-	userRepo   *repository.UserRepository
+	userRepo   UserRepository
 	jwtManager *jwt.Manager
 	logger     zerolog.Logger
 }
 
-func NewAuthService(userRepo *repository.UserRepository, jwtManager *jwt.Manager, logger zerolog.Logger) *AuthService {
+func NewAuthService(userRepo UserRepository, jwtManager *jwt.Manager, logger zerolog.Logger) *AuthService {
 	return &AuthService{userRepo: userRepo, jwtManager: jwtManager, logger: logger}
 }
 
