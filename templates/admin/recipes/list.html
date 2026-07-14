@@ -31,6 +31,7 @@
                     <th>ID</th>
                     <th>Название</th>
                     <th>Тип</th>
+                    <th>Порций</th>
                     <th>Ккал</th>
                     <th>Б/Ж/У</th>
                     <th></th>
@@ -42,6 +43,7 @@
                     <td>{{.ID}}</td>
                     <td>{{.Title}}</td>
                     <td>{{.MealType.Name}}</td>
+                    <td>{{.Servings}}</td>
                     <td>{{.Calories}}</td>
                     <td>{{printf "%.0f" .ProteinG}}/{{printf "%.0f" .FatG}}/{{printf "%.0f" .CarbsG}}</td>
                     <td class="actions">

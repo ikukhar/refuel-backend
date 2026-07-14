@@ -22,7 +22,9 @@ func TestNutritionService_GetToday_CreatesBaseline(t *testing.T) {
 	mockUserRepo := mocks.NewMockUserRepository(ctrl)
 	mockRecipeRepo := mocks.NewMockRecipeRepository(ctrl)
 
-	svc := NewNutritionService(mockNutritionRepo, mockActivityRepo, mockUserRepo, mockRecipeRepo)
+	mockMealPeriodRepo := mocks.NewMockMealPeriodRepository(ctrl)
+
+	svc := NewNutritionService(mockNutritionRepo, mockActivityRepo, mockUserRepo, mockRecipeRepo, mockMealPeriodRepo)
 
 	now := time.Now().Truncate(24 * time.Hour)
 
@@ -37,6 +39,10 @@ func TestNutritionService_GetToday_CreatesBaseline(t *testing.T) {
 	mockActivityRepo.EXPECT().
 		FindByUserID(uint(1), gomock.Any(), nil, 200, 0).
 		Return([]model.Activity{}, nil)
+
+	mockMealPeriodRepo.EXPECT().
+		FindByUserID(uint(1)).
+		Return(nil, nil)
 
 	mockNutritionRepo.EXPECT().
 		Upsert(gomock.Any(), gomock.Any()).
@@ -68,7 +74,9 @@ func TestNutritionService_GetToday_WithWeight(t *testing.T) {
 	mockUserRepo := mocks.NewMockUserRepository(ctrl)
 	mockRecipeRepo := mocks.NewMockRecipeRepository(ctrl)
 
-	svc := NewNutritionService(mockNutritionRepo, mockActivityRepo, mockUserRepo, mockRecipeRepo)
+	mockMealPeriodRepo := mocks.NewMockMealPeriodRepository(ctrl)
+
+	svc := NewNutritionService(mockNutritionRepo, mockActivityRepo, mockUserRepo, mockRecipeRepo, mockMealPeriodRepo)
 
 	now := time.Now().Truncate(24 * time.Hour)
 
@@ -83,6 +91,10 @@ func TestNutritionService_GetToday_WithWeight(t *testing.T) {
 	mockActivityRepo.EXPECT().
 		FindByUserID(uint(1), gomock.Any(), nil, 200, 0).
 		Return([]model.Activity{}, nil)
+
+	mockMealPeriodRepo.EXPECT().
+		FindByUserID(uint(1)).
+		Return(nil, nil)
 
 	mockNutritionRepo.EXPECT().
 		Upsert(gomock.Any(), gomock.Any()).
@@ -115,7 +127,15 @@ func TestNutritionService_GetMeal_Valid(t *testing.T) {
 	mockUserRepo := mocks.NewMockUserRepository(ctrl)
 	mockRecipeRepo := mocks.NewMockRecipeRepository(ctrl)
 
-	svc := NewNutritionService(mockNutritionRepo, mockActivityRepo, mockUserRepo, mockRecipeRepo)
+	mockMealPeriodRepo := mocks.NewMockMealPeriodRepository(ctrl)
+
+	svc := NewNutritionService(mockNutritionRepo, mockActivityRepo, mockUserRepo, mockRecipeRepo, mockMealPeriodRepo)
+
+	mockMealPeriodRepo.EXPECT().
+		FindByUserID(uint(1)).
+		Return([]model.MealPeriod{
+			{MealType: model.MealBreakfast, Name: "Завтрак", StartHour: 7, StartMinute: 0},
+		}, nil)
 
 	mockRecipeRepo.EXPECT().
 		FindByMealTypeExcludeIDs("breakfast", gomock.Any()).
@@ -134,7 +154,7 @@ func TestNutritionService_GetMeal_InvalidType(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	svc := NewNutritionService(nil, nil, nil, nil)
+	svc := NewNutritionService(nil, nil, nil, nil, nil)
 
 	meal, err := svc.GetMeal(context.Background(), 1, "brunch")
 

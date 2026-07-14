@@ -50,8 +50,10 @@
                 <tr>
                     <th>ID</th>
                     <th>User ID</th>
+                    <th>Название</th>
                     <th>Тип</th>
                     <th>Время</th>
+                    <th>% калорий</th>
                     <th></th>
                 </tr>
             </thead>
@@ -60,8 +62,10 @@
                 <tr>
                     <td>{{.ID}}</td>
                     <td>{{.UserID}}</td>
+                    <td>{{.Name}}</td>
                     <td>{{.MealType}}</td>
                     <td>{{printf "%02d:%02d" .StartHour .StartMinute}}</td>
+                    <td>{{.CaloriesPercent}}</td>
                     <td class="actions">
                         <a href="/admin/user-meal-periods/{{.ID}}/edit" role="button" class="outline">✎</a>
                         <form hx-delete="/admin/user-meal-periods/{{.ID}}" hx-confirm="Удалить?" hx-target="closest tr" hx-swap="outerHTML">

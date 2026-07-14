@@ -44,7 +44,7 @@ func main() {
 		logger.Fatal().Err(err).Msg("failed to connect to database")
 	}
 
-	if err := db.AutoMigrate(&model.User{}, &model.Activity{}, &model.DailyNutrition{}, &model.Recipe{}, &model.UserMealPeriod{}); err != nil {
+	if err := db.AutoMigrate(&model.User{}, &model.Activity{}, &model.DailyNutrition{}, &model.Recipe{}, &model.MealPeriod{}); err != nil {
 		logger.Fatal().Err(err).Msg("failed to run migrations")
 	}
 
@@ -63,21 +63,23 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	activityRepo := repository.NewActivityRepository(db)
 	nutritionRepo := repository.NewDailyNutritionRepository(db)
-	userMealPeriodsRepo := repository.NewUserMealPeriodRepository(db)
+	userMealPeriodsRepo := repository.NewMealPeriodRepository(db)
 
 	authService := service.NewAuthService(userRepo, jwtManager, logger)
-	userService := service.NewUserService(userRepo)
+	userService := service.NewUserService(userRepo, userMealPeriodsRepo)
 	activityService := service.NewActivityService(activityRepo)
-	nutritionService := service.NewNutritionService(nutritionRepo, activityRepo, userRepo, recipeRepo)
+	nutritionService := service.NewNutritionService(nutritionRepo, activityRepo, userRepo, recipeRepo, userMealPeriodsRepo)
+	mealPeriodService := service.NewMealPeriodService(userMealPeriodsRepo)
 
 	authHandler := handler.NewAuthHandler(authService)
 	userHandler := handler.NewUserHandler(userService)
 	activityHandler := handler.NewActivityHandler(activityService)
 	nutritionHandler := handler.NewNutritionHandler(nutritionService)
+	mealPeriodHandler := handler.NewMealPeriodHandler(mealPeriodService)
 	recipeAdminHandler := adminHandler.NewRecipeAdminHandler(recipeRepo)
-	userMealPeriodsAdminHandler := adminHandler.NewUserMealPeriodAdminHandler(userMealPeriodsRepo)
+	userMealPeriodsAdminHandler := adminHandler.NewMealPeriodAdminHandler(userMealPeriodsRepo)
 
-	r := router.Setup(cfg, logger, jwtManager, authHandler, userHandler, activityHandler, nutritionHandler, recipeAdminHandler, userMealPeriodsAdminHandler)
+	r := router.Setup(cfg, logger, jwtManager, authHandler, userHandler, activityHandler, nutritionHandler, mealPeriodHandler, recipeAdminHandler, userMealPeriodsAdminHandler)
 
 	addr := fmt.Sprintf(":%d", cfg.AppPort)
 	srv := &http.Server{

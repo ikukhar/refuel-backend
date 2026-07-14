@@ -9,37 +9,37 @@ import (
 	"github.com/ikukhar/refuel-backend/internal/repository"
 )
 
-type UserMealPeriodAdminHandler struct {
-	repo *repository.UserMealPeriodRepository
+type MealPeriodAdminHandler struct {
+	repo *repository.MealPeriodRepository
 }
 
-func NewUserMealPeriodAdminHandler(repo *repository.UserMealPeriodRepository) *UserMealPeriodAdminHandler {
-	return &UserMealPeriodAdminHandler{repo: repo}
+func NewMealPeriodAdminHandler(repo *repository.MealPeriodRepository) *MealPeriodAdminHandler {
+	return &MealPeriodAdminHandler{repo: repo}
 }
 
-func (h *UserMealPeriodAdminHandler) List(c *gin.Context) {
+func (h *MealPeriodAdminHandler) List(c *gin.Context) {
 	periods, err := h.repo.FindAll()
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
-	c.HTML(http.StatusOK, "user_meal_periods_list.html", gin.H{
+	c.HTML(http.StatusOK, "meal_periods_list.html", gin.H{
 		"Periods":      periods,
 		"DefaultMeals": model.DefaultMealPeriods,
 	})
 }
 
-func (h *UserMealPeriodAdminHandler) NewForm(c *gin.Context) {
-	c.HTML(http.StatusOK, "user_meal_periods_form.html", gin.H{
+func (h *MealPeriodAdminHandler) NewForm(c *gin.Context) {
+	c.HTML(http.StatusOK, "meal_periods_form.html", gin.H{
 		"Period":       nil,
 		"DefaultMeals": model.DefaultMealPeriods,
 	})
 }
 
-func (h *UserMealPeriodAdminHandler) Create(c *gin.Context) {
-	p, errMsg := parseUserMealPeriodForm(c)
+func (h *MealPeriodAdminHandler) Create(c *gin.Context) {
+	p, errMsg := parseMealPeriodForm(c)
 	if errMsg != "" {
-		c.HTML(http.StatusUnprocessableEntity, "user_meal_periods_form.html", gin.H{
+		c.HTML(http.StatusUnprocessableEntity, "meal_periods_form.html", gin.H{
 			"Period":       nil,
 			"DefaultMeals": model.DefaultMealPeriods,
 			"Error":        errMsg,
@@ -47,7 +47,7 @@ func (h *UserMealPeriodAdminHandler) Create(c *gin.Context) {
 		return
 	}
 	if err := h.repo.Create(p); err != nil {
-		c.HTML(http.StatusUnprocessableEntity, "user_meal_periods_form.html", gin.H{
+		c.HTML(http.StatusUnprocessableEntity, "meal_periods_form.html", gin.H{
 			"Period":       nil,
 			"DefaultMeals": model.DefaultMealPeriods,
 			"Error":        err.Error(),
@@ -57,20 +57,20 @@ func (h *UserMealPeriodAdminHandler) Create(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/admin/user-meal-periods")
 }
 
-func (h *UserMealPeriodAdminHandler) EditForm(c *gin.Context) {
+func (h *MealPeriodAdminHandler) EditForm(c *gin.Context) {
 	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 	p, err := h.repo.FindByID(uint(id))
 	if err != nil {
 		c.String(http.StatusNotFound, "Период не найден")
 		return
 	}
-	c.HTML(http.StatusOK, "user_meal_periods_form.html", gin.H{
+	c.HTML(http.StatusOK, "meal_periods_form.html", gin.H{
 		"Period":       p,
 		"DefaultMeals": model.DefaultMealPeriods,
 	})
 }
 
-func (h *UserMealPeriodAdminHandler) Update(c *gin.Context) {
+func (h *MealPeriodAdminHandler) Update(c *gin.Context) {
 	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 	existing, err := h.repo.FindByID(uint(id))
 	if err != nil {
@@ -78,9 +78,9 @@ func (h *UserMealPeriodAdminHandler) Update(c *gin.Context) {
 		return
 	}
 
-	p, errMsg := parseUserMealPeriodForm(c)
+	p, errMsg := parseMealPeriodForm(c)
 	if errMsg != "" {
-		c.HTML(http.StatusUnprocessableEntity, "user_meal_periods_form.html", gin.H{
+		c.HTML(http.StatusUnprocessableEntity, "meal_periods_form.html", gin.H{
 			"Period":       existing,
 			"DefaultMeals": model.DefaultMealPeriods,
 			"Error":        errMsg,
@@ -97,7 +97,7 @@ func (h *UserMealPeriodAdminHandler) Update(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/admin/user-meal-periods")
 }
 
-func (h *UserMealPeriodAdminHandler) Delete(c *gin.Context) {
+func (h *MealPeriodAdminHandler) Delete(c *gin.Context) {
 	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err := h.repo.Delete(uint(id)); err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
@@ -106,7 +106,7 @@ func (h *UserMealPeriodAdminHandler) Delete(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-func parseUserMealPeriodForm(c *gin.Context) (*model.UserMealPeriod, string) {
+func parseMealPeriodForm(c *gin.Context) (*model.MealPeriod, string) {
 	userIDStr := c.DefaultPostForm("user_id", "0")
 	userID, _ := strconv.ParseUint(userIDStr, 10, 64)
 
@@ -118,10 +118,16 @@ func parseUserMealPeriodForm(c *gin.Context) (*model.UserMealPeriod, string) {
 	startHour, _ := strconv.Atoi(c.PostForm("start_hour"))
 	startMinute, _ := strconv.Atoi(c.DefaultPostForm("start_minute", "0"))
 
-	return &model.UserMealPeriod{
-		UserID:      uint(userID),
-		MealType:    model.MealType(mealType),
-		StartHour:   startHour,
-		StartMinute: startMinute,
+	name := c.PostForm("name")
+
+	caloriesPercent, _ := strconv.ParseFloat(c.DefaultPostForm("calories_percent", "0"), 64)
+
+	return &model.MealPeriod{
+		UserID:          uint(userID),
+		MealType:        model.MealType(mealType),
+		Name:            name,
+		StartHour:       startHour,
+		StartMinute:     startMinute,
+		CaloriesPercent: caloriesPercent,
 	}, ""
 }

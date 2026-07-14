@@ -21,8 +21,9 @@ func Setup(
 	userHandler *handler.UserHandler,
 	activityHandler *handler.ActivityHandler,
 	nutritionHandler *handler.NutritionHandler,
+	mealPeriodHandler *handler.MealPeriodHandler,
 	recipeAdminHandler *adminHandler.RecipeAdminHandler,
-	userMealPeriodsAdminHandler *adminHandler.UserMealPeriodAdminHandler,
+	userMealPeriodsAdminHandler *adminHandler.MealPeriodAdminHandler,
 ) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Recovery())
@@ -35,6 +36,7 @@ func Setup(
 	api := r.Group("/api/v1")
 	{
 		api.GET("/health", handler.HealthCheck)
+		api.GET("/meal-periods/default", handler.GetDefaultMealPeriods)
 
 		auth := api.Group("/auth")
 		{
@@ -50,6 +52,8 @@ func Setup(
 			protected.POST("/activities", activityHandler.Create)
 
 			protected.GET("/nutrition/today", nutritionHandler.GetToday)
+
+			protected.POST("/meal-periods", mealPeriodHandler.Create)
 
 			user := protected.Group("/user")
 			{

@@ -37,6 +37,9 @@
                         {{end}}
                     </select>
                 </label>
+                <label>Порций
+                    <input type="number" name="servings" value="{{if .Recipe}}{{.Recipe.Servings}}{{else}}1{{end}}" min="1">
+                </label>
             </div>
             <label>Описание
                 <textarea name="description" rows="3">{{if .Recipe}}{{.Recipe.Description}}{{end}}</textarea>

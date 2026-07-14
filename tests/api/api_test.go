@@ -36,6 +36,7 @@ type apiSuite struct {
 	mockAct     *mockrepo.MockActivityRepository
 	mockNutr    *mockrepo.MockDailyNutritionRepository
 	mockRecipe  *mockrepo.MockRecipeRepository
+	mockMealPeriod *mockrepo.MockMealPeriodRepository
 }
 
 func setupAPI(t *testing.T) *apiSuite {
@@ -55,22 +56,25 @@ func setupAPI(t *testing.T) *apiSuite {
 	mockAct := mockrepo.NewMockActivityRepository(ctrl)
 	mockNutr := mockrepo.NewMockDailyNutritionRepository(ctrl)
 	mockRecipe := mockrepo.NewMockRecipeRepository(ctrl)
+	mockMealPeriod := mockrepo.NewMockMealPeriodRepository(ctrl)
 
-	userSvc := service.NewUserService(mockUser)
+	userSvc := service.NewUserService(mockUser, mockMealPeriod)
 	authSvc := service.NewAuthService(mockUser, jwtManager, logger)
 	activitySvc := service.NewActivityService(mockAct)
-	nutritionSvc := service.NewNutritionService(mockNutr, mockAct, mockUser, mockRecipe)
+	nutritionSvc := service.NewNutritionService(mockNutr, mockAct, mockUser, mockRecipe, mockMealPeriod)
+	mealPeriodSvc := service.NewMealPeriodService(mockMealPeriod)
 
 	authH := handler.NewAuthHandler(authSvc)
 	userH := handler.NewUserHandler(userSvc)
 	activityH := handler.NewActivityHandler(activitySvc)
 	nutritionH := handler.NewNutritionHandler(nutritionSvc)
+	mealPeriodH := handler.NewMealPeriodHandler(mealPeriodSvc)
 	recipeAdminH := adminHandler.NewRecipeAdminHandler(nil)
-	userMealPeriodsAdminH := adminHandler.NewUserMealPeriodAdminHandler(nil)
+	userMealPeriodsAdminH := adminHandler.NewMealPeriodAdminHandler(nil)
 
 	cfg := &config.Config{AdminUser: "admin", AdminPass: "admin"}
 
-	r := router.Setup(cfg, logger, jwtManager, authH, userH, activityH, nutritionH, recipeAdminH, userMealPeriodsAdminH)
+	r := router.Setup(cfg, logger, jwtManager, authH, userH, activityH, nutritionH, mealPeriodH, recipeAdminH, userMealPeriodsAdminH)
 
 	return &apiSuite{
 		r:          r,
@@ -80,6 +84,7 @@ func setupAPI(t *testing.T) *apiSuite {
 		mockAct:    mockAct,
 		mockNutr:   mockNutr,
 		mockRecipe: mockRecipe,
+		mockMealPeriod: mockMealPeriod,
 	}
 }
 
@@ -282,6 +287,10 @@ func TestGetProfile_Success(t *testing.T) {
 		FindByID(uint(1)).
 		Return(&model.User{ID: 1, Email: "test@test.com", Name: "Test User"}, nil)
 
+	s.mockMealPeriod.EXPECT().
+		FindByUserID(uint(1)).
+		Return(nil, nil)
+
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/api/v1/user/profile", nil)
 	req.Header.Set("Authorization", authHeader(t, s.jwtManager, 1))
@@ -459,6 +468,14 @@ func TestGetNutrition_FullDay(t *testing.T) {
 			{ID: 1, Calories: testutil.PtrInt(300), StartedAt: time.Now()},
 		}, nil)
 
+	s.mockMealPeriod.EXPECT().
+		FindByUserID(uint(1)).
+		Return([]model.MealPeriod{
+			{MealType: model.MealBreakfast, Name: "Завтрак", StartHour: 7, StartMinute: 0, CaloriesPercent: 25},
+			{MealType: model.MealLunch, Name: "Обед", StartHour: 12, StartMinute: 0, CaloriesPercent: 35},
+			{MealType: model.MealDinner, Name: "Ужин", StartHour: 18, StartMinute: 0, CaloriesPercent: 25},
+		}, nil)
+
 	s.mockNutr.EXPECT().
 		Upsert(gomock.Any(), gomock.Any()).
 		Return(nil)
@@ -488,6 +505,12 @@ func TestGetNutrition_FullDay(t *testing.T) {
 func TestGetNutrition_WithMeal(t *testing.T) {
 	s := setupAPI(t)
 	defer s.ctrl.Finish()
+
+	s.mockMealPeriod.EXPECT().
+		FindByUserID(uint(1)).
+		Return([]model.MealPeriod{
+			{MealType: model.MealLunch, Name: "Обед", StartHour: 12, StartMinute: 0},
+		}, nil)
 
 	s.mockRecipe.EXPECT().
 		FindByMealTypeExcludeIDs("lunch", gomock.Any()).

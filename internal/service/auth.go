@@ -29,13 +29,14 @@ type AuthResponse struct {
 }
 
 type UserResponse struct {
-	ID     uint    `json:"id"`
-	Email  string  `json:"email"`
-	Name   string  `json:"name"`
-	Weight float64 `json:"weight"`
-	Height float64 `json:"height"`
-	Age    int     `json:"age"`
-	Gender string  `json:"gender"`
+	ID          uint              `json:"id"`
+	Email       string            `json:"email"`
+	Name        string            `json:"name"`
+	Weight      float64           `json:"weight"`
+	Height      float64           `json:"height"`
+	Age         int               `json:"age"`
+	Gender      string            `json:"gender"`
+	MealPeriods []model.MealPeriod `json:"meal_periods"`
 }
 
 func (s *AuthService) Register(ctx context.Context, email, password, name string, weight, height float64, age int, gender string) (*AuthResponse, error) {

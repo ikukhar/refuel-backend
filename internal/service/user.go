@@ -8,11 +8,12 @@ import (
 )
 
 type UserService struct {
-	userRepo UserRepository
+	userRepo         UserRepository
+	mealPeriodRepo   MealPeriodRepository
 }
 
-func NewUserService(userRepo UserRepository) *UserService {
-	return &UserService{userRepo: userRepo}
+func NewUserService(userRepo UserRepository, mealPeriodRepo MealPeriodRepository) *UserService {
+	return &UserService{userRepo: userRepo, mealPeriodRepo: mealPeriodRepo}
 }
 
 func (s *UserService) GetByID(ctx context.Context, id uint) (*UserResponse, error) {
@@ -24,14 +25,20 @@ func (s *UserService) GetByID(ctx context.Context, id uint) (*UserResponse, erro
 		return nil, err
 	}
 
+	periods, _ := s.mealPeriodRepo.FindByUserID(id)
+	if len(periods) == 0 {
+		periods = nil
+	}
+
 	return &UserResponse{
-		ID:     user.ID,
-		Email:  user.Email,
-		Name:   user.Name,
-		Weight: user.Weight,
-		Height: user.Height,
-		Age:    user.Age,
-		Gender: user.Gender,
+		ID:          user.ID,
+		Email:       user.Email,
+		Name:        user.Name,
+		Weight:      user.Weight,
+		Height:      user.Height,
+		Age:         user.Age,
+		Gender:      user.Gender,
+		MealPeriods: periods,
 	}, nil
 }
 

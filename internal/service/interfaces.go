@@ -34,3 +34,11 @@ type RecipeRepository interface {
 	Update(recipe *model.Recipe) error
 	Delete(id uint) error
 }
+
+type MealPeriodRepository interface {
+	FindByUserID(userID uint) ([]model.MealPeriod, error)
+	Create(p *model.MealPeriod) error
+	Update(p *model.MealPeriod) error
+	Delete(id uint) error
+	DeleteByUserID(userID uint) error
+}

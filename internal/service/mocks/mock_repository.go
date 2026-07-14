@@ -346,3 +346,98 @@ func (mr *MockRecipeRepositoryMockRecorder) Update(recipe any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockRecipeRepository)(nil).Update), recipe)
 }
+
+// MockMealPeriodRepository is a mock of MealPeriodRepository interface.
+type MockMealPeriodRepository struct {
+	ctrl     *gomock.Controller
+	recorder *MockMealPeriodRepositoryMockRecorder
+	isgomock struct{}
+}
+
+// MockMealPeriodRepositoryMockRecorder is the mock recorder for MockMealPeriodRepository.
+type MockMealPeriodRepositoryMockRecorder struct {
+	mock *MockMealPeriodRepository
+}
+
+// NewMockMealPeriodRepository creates a new mock instance.
+func NewMockMealPeriodRepository(ctrl *gomock.Controller) *MockMealPeriodRepository {
+	mock := &MockMealPeriodRepository{ctrl: ctrl}
+	mock.recorder = &MockMealPeriodRepositoryMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockMealPeriodRepository) EXPECT() *MockMealPeriodRepositoryMockRecorder {
+	return m.recorder
+}
+
+// FindByUserID mocks base method.
+func (m *MockMealPeriodRepository) FindByUserID(userID uint) ([]model.MealPeriod, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindByUserID", userID)
+	ret0, _ := ret[0].([]model.MealPeriod)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindByUserID indicates an expected call of FindByUserID.
+func (mr *MockMealPeriodRepositoryMockRecorder) FindByUserID(userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByUserID", reflect.TypeOf((*MockMealPeriodRepository)(nil).FindByUserID), userID)
+}
+
+// Create mocks base method.
+func (m *MockMealPeriodRepository) Create(p *model.MealPeriod) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Create", p)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Create indicates an expected call of Create.
+func (mr *MockMealPeriodRepositoryMockRecorder) Create(p any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockMealPeriodRepository)(nil).Create), p)
+}
+
+// DeleteByUserID mocks base method.
+func (m *MockMealPeriodRepository) DeleteByUserID(userID uint) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteByUserID", userID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteByUserID indicates an expected call of DeleteByUserID.
+func (mr *MockMealPeriodRepositoryMockRecorder) DeleteByUserID(userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteByUserID", reflect.TypeOf((*MockMealPeriodRepository)(nil).DeleteByUserID), userID)
+}
+
+// Update mocks base method.
+func (m *MockMealPeriodRepository) Update(p *model.MealPeriod) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Update", p)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Update indicates an expected call of Update.
+func (mr *MockMealPeriodRepositoryMockRecorder) Update(p any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockMealPeriodRepository)(nil).Update), p)
+}
+
+// Delete mocks base method.
+func (m *MockMealPeriodRepository) Delete(id uint) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockMealPeriodRepositoryMockRecorder) Delete(id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockMealPeriodRepository)(nil).Delete), id)
+}

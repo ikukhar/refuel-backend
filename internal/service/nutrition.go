@@ -32,10 +32,11 @@ func effectiveLoad(history []dailyLoad, today time.Time) float64 {
 }
 
 type NutritionService struct {
-	nutritionRepo DailyNutritionRepository
-	activityRepo  ActivityRepository
-	userRepo      UserRepository
-	recipeRepo    RecipeRepository
+	nutritionRepo  DailyNutritionRepository
+	activityRepo   ActivityRepository
+	userRepo       UserRepository
+	recipeRepo     RecipeRepository
+	mealPeriodRepo MealPeriodRepository
 }
 
 func NewNutritionService(
@@ -43,35 +44,31 @@ func NewNutritionService(
 	activityRepo ActivityRepository,
 	userRepo UserRepository,
 	recipeRepo RecipeRepository,
+	mealPeriodRepo MealPeriodRepository,
 ) *NutritionService {
 	return &NutritionService{
-		nutritionRepo: nutritionRepo,
-		activityRepo:  activityRepo,
-		userRepo:      userRepo,
-		recipeRepo:    recipeRepo,
+		nutritionRepo:  nutritionRepo,
+		activityRepo:   activityRepo,
+		userRepo:       userRepo,
+		recipeRepo:     recipeRepo,
+		mealPeriodRepo: mealPeriodRepo,
 	}
 }
 
 type DishResponse struct {
-	RecipeID uint    `json:"recipe_id"`
-	Title    string  `json:"title"`
-	Calories int     `json:"calories"`
-	Protein  float64 `json:"protein"`
-	Fat      float64 `json:"fat"`
-	Carbs    float64 `json:"carbs"`
-	ImageURL *string `json:"image_url,omitempty"`
+	RecipeID uint   `json:"recipe_id"`
+	Title    string `json:"title"`
+	Calories int    `json:"calories"`
+	MealType string `json:"meal_type"`
 }
 
 type MealSlotResponse struct {
-	Time          string         `json:"time"`
-	MealType      string         `json:"meal_type"`
-	MealName      string         `json:"meal_name"`
-	CaloriesTarget float64       `json:"calories_target"`
-	Dishes        []DishResponse `json:"dishes"`
-	TotalCalories int            `json:"total_calories"`
-	TotalProtein  float64        `json:"total_protein"`
-	TotalFat      float64        `json:"total_fat"`
-	TotalCarbs    float64        `json:"total_carbs"`
+	Time           string         `json:"time"`
+	MealType       string         `json:"meal_type"`
+	MealName       string         `json:"meal_name"`
+	CaloriesTarget float64        `json:"calories_target"`
+	Dishes         []DishResponse `json:"dishes"`
+	TotalCalories  int            `json:"total_calories"`
 }
 
 type NutritionResponse struct {
@@ -127,10 +124,7 @@ func (s *NutritionService) pickRecipesForMeal(mealType model.MealType, targetCal
 			RecipeID: r.ID,
 			Title:    r.Title,
 			Calories: r.Calories,
-			Protein:  r.ProteinG,
-			Fat:      r.FatG,
-			Carbs:    r.CarbsG,
-			ImageURL: r.ImageURL,
+			MealType: string(mealType),
 		})
 		totalCalories += r.Calories
 	}
@@ -147,12 +141,9 @@ func mealSlotTime(period model.MealPeriod) string {
 	return fmt.Sprintf("%d:%02d", h, m)
 }
 
-func sumDishes(dishes []DishResponse) (totalCalories int, totalProtein, totalFat, totalCarbs float64) {
+func sumDishes(dishes []DishResponse) (totalCalories int) {
 	for _, d := range dishes {
 		totalCalories += d.Calories
-		totalProtein += d.Protein
-		totalFat += d.Fat
-		totalCarbs += d.Carbs
 	}
 	return
 }
@@ -219,6 +210,8 @@ func (s *NutritionService) GetToday(ctx context.Context, userID uint) (*Nutritio
 
 	protein, fat, carbs := distributeMacros(tdee)
 
+	periods, _ := s.mealPeriodRepo.FindByUserID(userID)
+
 	nutrition := &model.DailyNutrition{
 		UserID:         userID,
 		Date:           beginOfDay,
@@ -229,7 +222,7 @@ func (s *NutritionService) GetToday(ctx context.Context, userID uint) (*Nutritio
 		Status:         status,
 	}
 
-	resp := s.buildResponse(nutrition)
+	resp := s.buildResponse(nutrition, periods)
 
 	idsJSON, _ := json.Marshal(collectRecipeIDs(resp.Meals))
 	nutrition.PreviousRecipeIDs = string(idsJSON)
@@ -259,15 +252,46 @@ var validMeals = map[model.MealType]bool{
 
 func (s *NutritionService) GetMeal(ctx context.Context, userID uint, mealType string) (*MealSlotResponse, error) {
 	_ = ctx
-	_ = userID
 	mt := model.MealType(mealType)
 	if !validMeals[mt] {
 		return nil, fmt.Errorf("invalid meal: %s, allowed: breakfast, lunch, dinner", mealType)
 	}
 
+	periods, err := s.mealPeriodRepo.FindByUserID(userID)
+	if err != nil || len(periods) == 0 {
+		return s.pickMealFromDefaults(mt)
+	}
+
+	var slot *model.MealPeriod
+	for _, p := range periods {
+		if p.MealType == mt {
+			slot = &p
+			break
+		}
+	}
+	if slot == nil {
+		return nil, fmt.Errorf("no meal period found for %s", mealType)
+	}
+
 	dishes := s.pickRecipesForMeal(mt, 600, nil)
 	if len(dishes) == 0 {
 		return nil, fmt.Errorf("no recipes found for %s", mealType)
+	}
+
+	totalCal := sumDishes(dishes)
+	return &MealSlotResponse{
+		Time:          mealSlotTime(*slot),
+		MealType:      string(mt),
+		MealName:      slot.Name,
+		Dishes:        dishes,
+		TotalCalories: totalCal,
+	}, nil
+}
+
+func (s *NutritionService) pickMealFromDefaults(mt model.MealType) (*MealSlotResponse, error) {
+	dishes := s.pickRecipesForMeal(mt, 600, nil)
+	if len(dishes) == 0 {
+		return nil, fmt.Errorf("no recipes found for %s", mt)
 	}
 
 	slot := model.DefaultMealPeriods[0]
@@ -278,24 +302,21 @@ func (s *NutritionService) GetMeal(ctx context.Context, userID uint, mealType st
 		}
 	}
 
-	totalCal, totalProt, totalFat, totalCarbs := sumDishes(dishes)
+	totalCal := sumDishes(dishes)
 	return &MealSlotResponse{
-		Time:     mealSlotTime(slot),
-		MealType: string(mt),
-		MealName: mt.Name(),
-		Dishes:   dishes,
-		TotalCalories:  totalCal,
-		TotalProtein:   totalProt,
-		TotalFat:       totalFat,
-		TotalCarbs:     totalCarbs,
+		Time:          mealSlotTime(slot),
+		MealType:      string(mt),
+		MealName:      mt.Name(),
+		Dishes:        dishes,
+		TotalCalories: totalCal,
 	}, nil
 }
 
-func (s *NutritionService) buildResponse(n *model.DailyNutrition) *NutritionResponse {
+func (s *NutritionService) buildResponse(n *model.DailyNutrition, periods []model.MealPeriod) *NutritionResponse {
 	excludeIDs := parsePreviousRecipeIDs(n.PreviousRecipeIDs)
 
 	var meals []MealSlotResponse
-	for _, period := range model.DefaultMealPeriods {
+	for _, period := range periods {
 		mealTarget := n.CaloriesTarget * period.CaloriesPercent / 100
 		dishes := s.pickRecipesForMeal(period.MealType, mealTarget, excludeIDs)
 		if len(dishes) == 0 {
@@ -308,7 +329,7 @@ func (s *NutritionService) buildResponse(n *model.DailyNutrition) *NutritionResp
 		}
 		excludeIDs = append(excludeIDs, dishesIDs...)
 
-		totalCal, totalProt, totalFat, totalCarbs := sumDishes(dishes)
+		totalCal := sumDishes(dishes)
 		meals = append(meals, MealSlotResponse{
 			Time:           mealSlotTime(period),
 			MealType:       string(period.MealType),
@@ -316,9 +337,6 @@ func (s *NutritionService) buildResponse(n *model.DailyNutrition) *NutritionResp
 			CaloriesTarget: math.Round(mealTarget*10) / 10,
 			Dishes:         dishes,
 			TotalCalories:  totalCal,
-			TotalProtein:   math.Round(totalProt*10) / 10,
-			TotalFat:       math.Round(totalFat*10) / 10,
-			TotalCarbs:     math.Round(totalCarbs*10) / 10,
 		})
 	}
 
@@ -334,5 +352,6 @@ func (s *NutritionService) buildResponse(n *model.DailyNutrition) *NutritionResp
 }
 
 func (s *NutritionService) buildResponseFromNutrition(n *model.DailyNutrition) *NutritionResponse {
-	return s.buildResponse(n)
+	periods, _ := s.mealPeriodRepo.FindByUserID(n.UserID)
+	return s.buildResponse(n, periods)
 }

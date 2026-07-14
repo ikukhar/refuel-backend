@@ -10,13 +10,12 @@ import (
 	"github.com/ikukhar/refuel-backend/internal/model"
 	"github.com/ikukhar/refuel-backend/internal/service"
 	"github.com/ikukhar/refuel-backend/internal/service/mocks"
-	"github.com/ikukhar/refuel-backend/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
-func setupNutritionRouter(t *testing.T) (*gin.Engine, *mocks.MockDailyNutritionRepository, *mocks.MockActivityRepository, *mocks.MockUserRepository, *mocks.MockRecipeRepository) {
+func setupNutritionRouter(t *testing.T) (*gin.Engine, *mocks.MockDailyNutritionRepository, *mocks.MockActivityRepository, *mocks.MockUserRepository, *mocks.MockRecipeRepository, *mocks.MockMealPeriodRepository) {
 	t.Helper()
 	gin.SetMode(gin.TestMode)
 
@@ -25,8 +24,9 @@ func setupNutritionRouter(t *testing.T) (*gin.Engine, *mocks.MockDailyNutritionR
 	mockActivity := mocks.NewMockActivityRepository(ctrl)
 	mockUser := mocks.NewMockUserRepository(ctrl)
 	mockRecipe := mocks.NewMockRecipeRepository(ctrl)
+	mockMealPeriod := mocks.NewMockMealPeriodRepository(ctrl)
 
-	svc := service.NewNutritionService(mockNutrition, mockActivity, mockUser, mockRecipe)
+	svc := service.NewNutritionService(mockNutrition, mockActivity, mockUser, mockRecipe, mockMealPeriod)
 	h := NewNutritionHandler(svc)
 
 	r := gin.New()
@@ -35,11 +35,11 @@ func setupNutritionRouter(t *testing.T) (*gin.Engine, *mocks.MockDailyNutritionR
 		h.GetToday(c)
 	})
 
-	return r, mockNutrition, mockActivity, mockUser, mockRecipe
+	return r, mockNutrition, mockActivity, mockUser, mockRecipe, mockMealPeriod
 }
 
 func TestNutritionHandler_GetToday_Error(t *testing.T) {
-	r, mockN, _, mockU, _ := setupNutritionRouter(t)
+	r, mockN, _, mockU, _, _ := setupNutritionRouter(t)
 
 	mockN.EXPECT().
 		FindByUserAndDate(gomock.Any(), gomock.Any(), gomock.Any()).
@@ -62,8 +62,15 @@ func TestNutritionHandler_GetToday_WithMealParam(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockRecipe := mocks.NewMockRecipeRepository(ctrl)
-	svc := service.NewNutritionService(nil, nil, nil, mockRecipe)
+	mockMealPeriod := mocks.NewMockMealPeriodRepository(ctrl)
+	svc := service.NewNutritionService(nil, nil, nil, mockRecipe, mockMealPeriod)
 	h := NewNutritionHandler(svc)
+
+	mockMealPeriod.EXPECT().
+		FindByUserID(uint(1)).
+		Return([]model.MealPeriod{
+			{MealType: model.MealLunch, Name: "Обед", StartHour: 12, StartMinute: 0},
+		}, nil)
 
 	mockRecipe.EXPECT().
 		FindByMealTypeExcludeIDs("lunch", gomock.Any()).
@@ -98,7 +105,7 @@ func TestNutritionHandler_GetToday_WithMealParam(t *testing.T) {
 
 func TestNutritionHandler_GetToday_WithInvalidMeal(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	svc := service.NewNutritionService(nil, nil, nil, nil)
+	svc := service.NewNutritionService(nil, nil, nil, nil, nil)
 	h := NewNutritionHandler(svc)
 
 	r := gin.New()
@@ -128,8 +135,9 @@ func TestNutritionHandler_GetToday_FullResponse(t *testing.T) {
 	mockA := mocks.NewMockActivityRepository(ctrl)
 	mockU := mocks.NewMockUserRepository(ctrl)
 	mockR := mocks.NewMockRecipeRepository(ctrl)
+	mockM := mocks.NewMockMealPeriodRepository(ctrl)
 
-	svc := service.NewNutritionService(mockN, mockA, mockU, mockR)
+	svc := service.NewNutritionService(mockN, mockA, mockU, mockR, mockM)
 	h := NewNutritionHandler(svc)
 
 	mockN.EXPECT().
@@ -143,6 +151,14 @@ func TestNutritionHandler_GetToday_FullResponse(t *testing.T) {
 	mockA.EXPECT().
 		FindByUserID(uint(1), gomock.Any(), nil, 200, 0).
 		Return([]model.Activity{}, nil)
+
+	mockM.EXPECT().
+		FindByUserID(uint(1)).
+		Return([]model.MealPeriod{
+			{MealType: model.MealBreakfast, Name: "Завтрак", StartHour: 7, StartMinute: 0, CaloriesPercent: 25},
+			{MealType: model.MealLunch, Name: "Обед", StartHour: 12, StartMinute: 0, CaloriesPercent: 35},
+			{MealType: model.MealDinner, Name: "Ужин", StartHour: 18, StartMinute: 0, CaloriesPercent: 25},
+		}, nil)
 
 	mockN.EXPECT().
 		Upsert(gomock.Any(), gomock.Any()).
@@ -175,5 +191,3 @@ func TestNutritionHandler_GetToday_FullResponse(t *testing.T) {
 	assert.InDelta(t, 1809.3, resp["calories_target"].(float64), 1)
 	assert.NotEmpty(t, resp["meals"])
 }
-
-var _ = testutil.PtrFloat64

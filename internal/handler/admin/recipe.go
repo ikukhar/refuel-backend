@@ -201,6 +201,11 @@ func parseRecipeForm(c *gin.Context) (*model.Recipe, string) {
 		return nil, "Углеводы обязательны"
 	}
 
+	servings, _ := strconv.Atoi(c.PostForm("servings"))
+	if servings < 1 {
+		servings = 1
+	}
+
 	imageURL := c.PostForm("image_url")
 	var imageURLPtr *string
 	if imageURL != "" {
@@ -214,6 +219,7 @@ func parseRecipeForm(c *gin.Context) (*model.Recipe, string) {
 		ProteinG:    protein,
 		FatG:        fat,
 		CarbsG:      carbs,
+		Servings:    servings,
 		ImageURL:    imageURLPtr,
 		MealType:    model.MealType(c.PostForm("meal_type")),
 		Steps:       toJSONList(getFormLines(c, "steps")),
