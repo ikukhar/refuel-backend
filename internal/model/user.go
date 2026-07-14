@@ -9,6 +9,7 @@ type User struct {
 	Name      string    `gorm:"not null" json:"name"`
 	Weight    *float64  `gorm:"default:null" json:"weight"`
 	Height    *float64  `gorm:"default:null" json:"height"`
+	Age       *int      `gorm:"default:null" json:"age"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

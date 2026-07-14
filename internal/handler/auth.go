@@ -21,6 +21,7 @@ type RegisterRequest struct {
 	Name     string   `json:"name" binding:"required"`
 	Weight   *float64 `json:"weight,omitempty"`
 	Height   *float64 `json:"height,omitempty"`
+	Age      *int     `json:"age,omitempty"`
 }
 
 type LoginRequest struct {
@@ -35,7 +36,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.authService.Register(c.Request.Context(), req.Email, req.Password, req.Name, req.Weight, req.Height)
+	resp, err := h.authService.Register(c.Request.Context(), req.Email, req.Password, req.Name, req.Weight, req.Height, req.Age)
 	if err != nil {
 		c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 		return

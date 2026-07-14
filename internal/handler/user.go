@@ -31,6 +31,7 @@ type UpdateProfileRequest struct {
 	Name   *string  `json:"name,omitempty"`
 	Weight *float64 `json:"weight,omitempty"`
 	Height *float64 `json:"height,omitempty"`
+	Age    *int     `json:"age,omitempty"`
 }
 
 func (h *UserHandler) UpdateProfile(c *gin.Context) {
@@ -42,7 +43,7 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	if err := h.userService.UpdateProfile(c.Request.Context(), userID.(uint), req.Name, req.Weight, req.Height); err != nil {
+	if err := h.userService.UpdateProfile(c.Request.Context(), userID.(uint), req.Name, req.Weight, req.Height, req.Age); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

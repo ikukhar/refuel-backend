@@ -30,10 +30,11 @@ func (s *UserService) GetByID(ctx context.Context, id uint) (*UserResponse, erro
 		Name:   user.Name,
 		Weight: user.Weight,
 		Height: user.Height,
+		Age:    user.Age,
 	}, nil
 }
 
-func (s *UserService) UpdateProfile(ctx context.Context, id uint, name *string, weight, height *float64) error {
+func (s *UserService) UpdateProfile(ctx context.Context, id uint, name *string, weight, height *float64, age *int) error {
 	user, err := s.userRepo.FindByID(id)
 	if err != nil {
 		return err
@@ -47,6 +48,9 @@ func (s *UserService) UpdateProfile(ctx context.Context, id uint, name *string, 
 	}
 	if height != nil {
 		user.Height = height
+	}
+	if age != nil {
+		user.Age = age
 	}
 
 	return s.userRepo.Update(user)

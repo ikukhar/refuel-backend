@@ -42,7 +42,7 @@ func TestAuthService_Register_Success(t *testing.T) {
 	jwtManager := jwt.NewManager("test-secret", 15*time.Minute, 72*time.Hour)
 	svc := NewAuthService(mockUserRepo, jwtManager, logger)
 
-	resp, err := svc.Register(context.Background(), "test@test.com", "pass123", "Test", &weight, &height)
+	resp, err := svc.Register(context.Background(), "test@test.com", "pass123", "Test", &weight, &height, nil)
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -68,7 +68,7 @@ func TestAuthService_Register_DuplicateEmail(t *testing.T) {
 	jwtManager := jwt.NewManager("test-secret", 15*time.Minute, 72*time.Hour)
 	svc := NewAuthService(mockUserRepo, jwtManager, logger)
 
-	resp, err := svc.Register(context.Background(), "existing@test.com", "pass123", "Test", nil, nil)
+	resp, err := svc.Register(context.Background(), "existing@test.com", "pass123", "Test", nil, nil, nil)
 
 	require.Error(t, err)
 	assert.Nil(t, resp)
@@ -155,7 +155,7 @@ func TestAuthService_Register_RepoError(t *testing.T) {
 	jwtManager := jwt.NewManager("test-secret", 15*time.Minute, 72*time.Hour)
 	svc := NewAuthService(mockUserRepo, jwtManager, logger)
 
-	resp, err := svc.Register(context.Background(), "test@test.com", "pass123", "Test", nil, nil)
+	resp, err := svc.Register(context.Background(), "test@test.com", "pass123", "Test", nil, nil, nil)
 
 	require.Error(t, err)
 	assert.Nil(t, resp)
