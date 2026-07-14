@@ -61,7 +61,7 @@ func TestUserRepository_Update(t *testing.T) {
 
 	user := createUser(t, db)
 	user.Name = "Updated Name"
-	user.Weight = float64Ptr(80)
+	user.Weight = 80
 
 	err := repo.Update(user)
 	require.NoError(t, err)
@@ -69,7 +69,5 @@ func TestUserRepository_Update(t *testing.T) {
 	found, err := repo.FindByID(user.ID)
 	require.NoError(t, err)
 	assert.Equal(t, "Updated Name", found.Name)
-	assert.Equal(t, float64(80), *found.Weight)
+	assert.Equal(t, float64(80), found.Weight)
 }
-
-func float64Ptr(v float64) *float64 { return &v }

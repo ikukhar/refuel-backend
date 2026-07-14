@@ -79,7 +79,6 @@ func TestNutritionService_GetToday_WithWeight(t *testing.T) {
 	svc := NewNutritionService(mockNutritionRepo, mockActivityRepo, mockUserRepo, mockRecipeRepo)
 
 	now := time.Now().Truncate(24 * time.Hour)
-	w := 80.0
 
 	mockNutritionRepo.EXPECT().
 		FindByUserAndDate(uint(1), now).
@@ -87,7 +86,7 @@ func TestNutritionService_GetToday_WithWeight(t *testing.T) {
 
 	mockUserRepo.EXPECT().
 		FindByID(uint(1)).
-		Return(&model.User{ID: 1, Name: "Test", Weight: &w}, nil)
+		Return(&model.User{ID: 1, Name: "Test", Weight: 80}, nil)
 
 	mockActivityRepo.EXPECT().
 		FindByUserID(uint(1), &now, nil, 50, 0).

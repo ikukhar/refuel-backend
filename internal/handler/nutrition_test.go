@@ -133,7 +133,7 @@ func TestNutritionHandler_GetToday_FullResponse(t *testing.T) {
 
 	mockU.EXPECT().
 		FindByID(uint(1)).
-		Return(&model.User{ID: 1, Name: "Test", Weight: float64Ptr(70)}, nil)
+		Return(&model.User{ID: 1, Name: "Test", Weight: 70}, nil)
 
 	mockA.EXPECT().
 		FindByUserID(uint(1), gomock.Any(), nil, 50, 0).

@@ -112,11 +112,11 @@ func (s *NutritionService) GetToday(ctx context.Context, userID uint) (*Nutritio
 	baselineFat := 65.0
 	baselineCarbs := 250.0
 
-	if user.Weight != nil {
-		baselineCalories = *user.Weight * 30
-		baselineProtein = *user.Weight * 1.6
-		baselineFat = *user.Weight * 0.8
-		baselineCarbs = *user.Weight * 4.0
+	if user.Weight > 0 {
+		baselineCalories = user.Weight * 30
+		baselineProtein = user.Weight * 1.6
+		baselineFat = user.Weight * 0.8
+		baselineCarbs = user.Weight * 4.0
 	}
 
 	activities, err := s.activityRepo.FindByUserID(userID, &now, nil, 50, 0)

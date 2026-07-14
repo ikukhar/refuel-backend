@@ -436,7 +436,6 @@ func TestGetNutrition_FullDay(t *testing.T) {
 	defer s.ctrl.Finish()
 
 	now := time.Now().Truncate(24 * time.Hour)
-	weight := 70.0
 
 	s.mockNutr.EXPECT().
 		FindByUserAndDate(uint(1), now).
@@ -444,7 +443,7 @@ func TestGetNutrition_FullDay(t *testing.T) {
 
 	s.mockUser.EXPECT().
 		FindByID(uint(1)).
-		Return(&model.User{ID: 1, Weight: &weight}, nil)
+		Return(&model.User{ID: 1, Weight: 70}, nil)
 
 	s.mockAct.EXPECT().
 		FindByUserID(uint(1), &now, nil, 50, 0).

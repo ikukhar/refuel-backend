@@ -28,15 +28,16 @@ type AuthResponse struct {
 }
 
 type UserResponse struct {
-	ID     uint     `json:"id"`
-	Email  string   `json:"email"`
-	Name   string   `json:"name"`
-	Weight *float64 `json:"weight"`
-	Height *float64 `json:"height"`
-	Age    *int     `json:"age"`
+	ID     uint    `json:"id"`
+	Email  string  `json:"email"`
+	Name   string  `json:"name"`
+	Weight float64 `json:"weight"`
+	Height float64 `json:"height"`
+	Age    int     `json:"age"`
+	Gender string  `json:"gender"`
 }
 
-func (s *AuthService) Register(ctx context.Context, email, password, name string, weight, height *float64, age *int) (*AuthResponse, error) {
+func (s *AuthService) Register(ctx context.Context, email, password, name string, weight, height float64, age int, gender string) (*AuthResponse, error) {
 	existing, err := s.userRepo.FindByEmail(email)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
@@ -57,6 +58,7 @@ func (s *AuthService) Register(ctx context.Context, email, password, name string
 		Weight:   weight,
 		Height:   height,
 		Age:      age,
+		Gender:   gender,
 	}
 
 	if err := s.userRepo.Create(user); err != nil {
@@ -83,6 +85,7 @@ func (s *AuthService) Register(ctx context.Context, email, password, name string
 			Weight: user.Weight,
 			Height: user.Height,
 			Age:    user.Age,
+			Gender: user.Gender,
 		},
 	}, nil
 }
@@ -120,6 +123,7 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*AuthR
 			Weight: user.Weight,
 			Height: user.Height,
 			Age:    user.Age,
+			Gender: user.Gender,
 		},
 	}, nil
 }
@@ -157,6 +161,7 @@ func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (*AuthRe
 			Weight: user.Weight,
 			Height: user.Height,
 			Age:    user.Age,
+			Gender: user.Gender,
 		},
 	}, nil
 }

@@ -24,9 +24,6 @@ func TestAuthService_Register_Success(t *testing.T) {
 	mockUserRepo := mocks.NewMockUserRepository(ctrl)
 	logger := zerolog.Nop()
 
-	weight := 75.0
-	height := 180.0
-
 	mockUserRepo.EXPECT().
 		FindByEmail("test@test.com").
 		Return(nil, gorm.ErrRecordNotFound)
@@ -42,14 +39,16 @@ func TestAuthService_Register_Success(t *testing.T) {
 	jwtManager := jwt.NewManager("test-secret", 15*time.Minute, 72*time.Hour)
 	svc := NewAuthService(mockUserRepo, jwtManager, logger)
 
-	resp, err := svc.Register(context.Background(), "test@test.com", "pass123", "Test", &weight, &height, nil)
+	resp, err := svc.Register(context.Background(), "test@test.com", "pass123", "Test", 75, 180, 30, "male")
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 	assert.Equal(t, "test@test.com", resp.User.Email)
 	assert.Equal(t, "Test", resp.User.Name)
-	assert.Equal(t, &weight, resp.User.Weight)
-	assert.Equal(t, &height, resp.User.Height)
+	assert.Equal(t, float64(75), resp.User.Weight)
+	assert.Equal(t, float64(180), resp.User.Height)
+	assert.Equal(t, 30, resp.User.Age)
+	assert.Equal(t, "male", resp.User.Gender)
 	assert.NotEmpty(t, resp.AccessToken)
 	assert.NotEmpty(t, resp.RefreshToken)
 }
@@ -68,7 +67,7 @@ func TestAuthService_Register_DuplicateEmail(t *testing.T) {
 	jwtManager := jwt.NewManager("test-secret", 15*time.Minute, 72*time.Hour)
 	svc := NewAuthService(mockUserRepo, jwtManager, logger)
 
-	resp, err := svc.Register(context.Background(), "existing@test.com", "pass123", "Test", nil, nil, nil)
+	resp, err := svc.Register(context.Background(), "existing@test.com", "pass123", "Test", 0, 0, 0, "")
 
 	require.Error(t, err)
 	assert.Nil(t, resp)
@@ -155,7 +154,7 @@ func TestAuthService_Register_RepoError(t *testing.T) {
 	jwtManager := jwt.NewManager("test-secret", 15*time.Minute, 72*time.Hour)
 	svc := NewAuthService(mockUserRepo, jwtManager, logger)
 
-	resp, err := svc.Register(context.Background(), "test@test.com", "pass123", "Test", nil, nil, nil)
+	resp, err := svc.Register(context.Background(), "test@test.com", "pass123", "Test", 0, 0, 0, "")
 
 	require.Error(t, err)
 	assert.Nil(t, resp)
