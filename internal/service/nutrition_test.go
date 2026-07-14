@@ -43,16 +43,12 @@ func TestNutritionService_GetToday_CreatesBaseline(t *testing.T) {
 		Return(nil)
 
 	mockRecipeRepo.EXPECT().
-		FindByMealType("breakfast").
-		Return([]model.Recipe{{Title: "Каша", MealType: model.MealBreakfast, Calories: 300, ProteinG: 10, FatG: 5, CarbsG: 50}}, nil)
+		FindByMealTypeExcludeIDs(gomock.Any(), gomock.Any()).
+		Return([]model.Recipe{}, nil).AnyTimes()
 
 	mockRecipeRepo.EXPECT().
-		FindByMealType("lunch").
-		Return([]model.Recipe{{Title: "Суп", MealType: model.MealLunch, Calories: 400, ProteinG: 20, FatG: 10, CarbsG: 40}}, nil)
-
-	mockRecipeRepo.EXPECT().
-		FindByMealType("dinner").
-		Return(nil, nil)
+		FindByMealType(gomock.Any()).
+		Return([]model.Recipe{}, nil).AnyTimes()
 
 	resp, err := svc.GetToday(context.Background(), 1)
 
@@ -60,11 +56,7 @@ func TestNutritionService_GetToday_CreatesBaseline(t *testing.T) {
 	require.NotNil(t, resp)
 	assert.Equal(t, "baseline", resp.Status)
 	assert.Equal(t, 2000.0, resp.CaloriesTarget)
-	assert.NotNil(t, resp.Breakfast)
-	assert.Equal(t, "Каша", resp.Breakfast.Dish)
-	assert.NotNil(t, resp.Lunch)
-	assert.Equal(t, "Суп", resp.Lunch.Dish)
-	assert.Nil(t, resp.Dinner)
+	assert.Len(t, resp.Meals, 0)
 }
 
 func TestNutritionService_GetToday_WithWeight(t *testing.T) {
@@ -86,7 +78,7 @@ func TestNutritionService_GetToday_WithWeight(t *testing.T) {
 
 	mockUserRepo.EXPECT().
 		FindByID(uint(1)).
-		Return(&model.User{ID: 1, Name: "Test", Weight: 80}, nil)
+		Return(&model.User{ID: 1, Name: "Test", Weight: 80, Height: 180, Age: 30, Gender: "male"}, nil)
 
 	mockActivityRepo.EXPECT().
 		FindByUserID(uint(1), &now, nil, 50, 0).
@@ -95,19 +87,23 @@ func TestNutritionService_GetToday_WithWeight(t *testing.T) {
 	mockNutritionRepo.EXPECT().
 		Upsert(gomock.Any()).
 		DoAndReturn(func(n *model.DailyNutrition) error {
-			assert.Equal(t, 2400.0, n.CaloriesTarget)
-			assert.Equal(t, 128.0, n.ProteinG)
+			assert.InDelta(t, 2136.0, n.CaloriesTarget, 1)
+			assert.InDelta(t, 160.2, n.ProteinG, 1)
 			return nil
 		})
 
 	mockRecipeRepo.EXPECT().
+		FindByMealTypeExcludeIDs(gomock.Any(), gomock.Any()).
+		Return(nil, nil).AnyTimes()
+
+	mockRecipeRepo.EXPECT().
 		FindByMealType(gomock.Any()).
-		Return(nil, nil).Times(3)
+		Return([]model.Recipe{{Title: "Default", MealType: model.MealBreakfast, Calories: 200, ProteinG: 10, FatG: 5, CarbsG: 30}}, nil).AnyTimes()
 
 	resp, err := svc.GetToday(context.Background(), 1)
 	require.NoError(t, err)
-	assert.Equal(t, 2400.0, resp.CaloriesTarget)
-	assert.Equal(t, 128.0, resp.ProteinG)
+	assert.InDelta(t, 2136.0, resp.CaloriesTarget, 1)
+	assert.InDelta(t, 160.2, resp.ProteinG, 1)
 }
 
 func TestNutritionService_GetMeal_Valid(t *testing.T) {
@@ -122,14 +118,15 @@ func TestNutritionService_GetMeal_Valid(t *testing.T) {
 	svc := NewNutritionService(mockNutritionRepo, mockActivityRepo, mockUserRepo, mockRecipeRepo)
 
 	mockRecipeRepo.EXPECT().
-		FindByMealType("breakfast").
+		FindByMealTypeExcludeIDs("breakfast", gomock.Any()).
 		Return([]model.Recipe{{Title: "Омлет", MealType: model.MealBreakfast, Calories: 250, ProteinG: 18, FatG: 15, CarbsG: 5}}, nil)
 
 	meal, err := svc.GetMeal(context.Background(), 1, "breakfast")
 
 	require.NoError(t, err)
 	require.NotNil(t, meal)
-	assert.Equal(t, "Омлет", meal.Dish)
+	require.Len(t, meal.Dishes, 1)
+	assert.Equal(t, "Омлет", meal.Dishes[0].Title)
 	assert.Contains(t, meal.Time, ":")
 }
 

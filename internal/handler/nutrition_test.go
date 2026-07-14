@@ -65,7 +65,7 @@ func TestNutritionHandler_GetToday_WithMealParam(t *testing.T) {
 	h := NewNutritionHandler(svc)
 
 	mockRecipe.EXPECT().
-		FindByMealType("lunch").
+		FindByMealTypeExcludeIDs("lunch", gomock.Any()).
 		Return([]model.Recipe{
 			{Title: "Суп", MealType: model.MealLunch, Calories: 400, ProteinG: 20, FatG: 10, CarbsG: 40},
 		}, nil)
@@ -88,7 +88,11 @@ func TestNutritionHandler_GetToday_WithMealParam(t *testing.T) {
 
 	lunch, ok := resp["lunch"].(map[string]interface{})
 	require.True(t, ok)
-	assert.Equal(t, "Суп", lunch["dish"])
+	dishes, ok := lunch["dishes"].([]interface{})
+	require.True(t, ok)
+	require.Len(t, dishes, 1)
+	firstDish := dishes[0].(map[string]interface{})
+	assert.Equal(t, "Суп", firstDish["title"])
 }
 
 func TestNutritionHandler_GetToday_WithInvalidMeal(t *testing.T) {
@@ -133,7 +137,7 @@ func TestNutritionHandler_GetToday_FullResponse(t *testing.T) {
 
 	mockU.EXPECT().
 		FindByID(uint(1)).
-		Return(&model.User{ID: 1, Name: "Test", Weight: 70}, nil)
+		Return(&model.User{ID: 1, Name: "Test", Weight: 70, Height: 175, Age: 25, Gender: "female"}, nil)
 
 	mockA.EXPECT().
 		FindByUserID(uint(1), gomock.Any(), nil, 50, 0).
@@ -144,8 +148,12 @@ func TestNutritionHandler_GetToday_FullResponse(t *testing.T) {
 		Return(nil)
 
 	mockR.EXPECT().
+		FindByMealTypeExcludeIDs(gomock.Any(), gomock.Any()).
+		Return(nil, nil).AnyTimes()
+
+	mockR.EXPECT().
 		FindByMealType(gomock.Any()).
-		Return(nil, nil).Times(3)
+		Return([]model.Recipe{{Title: "Default", MealType: model.MealBreakfast, Calories: 200, ProteinG: 10, FatG: 5, CarbsG: 30}}, nil).AnyTimes()
 
 	r := gin.New()
 	r.GET("/api/v1/nutrition/today", func(c *gin.Context) {
@@ -163,7 +171,8 @@ func TestNutritionHandler_GetToday_FullResponse(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &resp)
 	require.NoError(t, err)
 	assert.Equal(t, "baseline", resp["status"])
-	assert.Equal(t, 2100.0, resp["calories_target"])
+	assert.InDelta(t, 1809.3, resp["calories_target"].(float64), 1)
+	assert.NotEmpty(t, resp["meals"])
 }
 
 func float64Ptr(v float64) *float64 { return &v }

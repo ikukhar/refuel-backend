@@ -29,6 +29,7 @@ type RecipeRepository interface {
 	FindByID(id uint) (*model.Recipe, error)
 	FindAll() ([]model.Recipe, error)
 	FindByMealType(mealType string) ([]model.Recipe, error)
+	FindByMealTypeExcludeIDs(mealType string, excludeIDs []uint) ([]model.Recipe, error)
 	Update(recipe *model.Recipe) error
 	Delete(id uint) error
 }

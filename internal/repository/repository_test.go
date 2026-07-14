@@ -52,7 +52,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf("failed to connect: %v", err)
 	}
 
-	if err := testDB.AutoMigrate(&model.User{}, &model.Activity{}, &model.DailyNutrition{}, &model.Recipe{}); err != nil {
+	if err := testDB.AutoMigrate(&model.User{}, &model.Activity{}, &model.DailyNutrition{}, &model.Recipe{}, &model.UserMealPeriod{}); err != nil {
 		log.Fatalf("failed to migrate: %v", err)
 	}
 

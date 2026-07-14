@@ -95,3 +95,5 @@ func TestActivityRepository_FindBySourceID_NotFound(t *testing.T) {
 }
 
 func intPtr(v int) *int { return &v }
+
+func float64Ptr(v float64) *float64 { return &v }

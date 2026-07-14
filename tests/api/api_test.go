@@ -122,7 +122,7 @@ func TestRegister_Success(t *testing.T) {
 			return nil
 		})
 
-	body := `{"email":"new@test.com","password":"pass123","name":"New User"}`
+	body := `{"email":"new@test.com","password":"pass123","name":"New User","weight":70,"height":175,"age":25,"gender":"male"}`
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/api/v1/auth/register", bytes.NewBufferString(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -144,7 +144,7 @@ func TestRegister_DuplicateEmail(t *testing.T) {
 		FindByEmail("dup@test.com").
 		Return(&model.User{Email: "dup@test.com"}, nil)
 
-	body := `{"email":"dup@test.com","password":"pass123","name":"Dup"}`
+	body := `{"email":"dup@test.com","password":"pass123","name":"Dup","weight":70,"height":175,"age":25,"gender":"female"}`
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/api/v1/auth/register", bytes.NewBufferString(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -443,7 +443,7 @@ func TestGetNutrition_FullDay(t *testing.T) {
 
 	s.mockUser.EXPECT().
 		FindByID(uint(1)).
-		Return(&model.User{ID: 1, Weight: 70}, nil)
+		Return(&model.User{ID: 1, Weight: 70, Height: 175, Age: 25, Gender: "female"}, nil)
 
 	s.mockAct.EXPECT().
 		FindByUserID(uint(1), &now, nil, 50, 0).
@@ -455,13 +455,13 @@ func TestGetNutrition_FullDay(t *testing.T) {
 		Upsert(gomock.Any()).
 		Return(nil)
 
-	for _, meal := range []string{"breakfast", "lunch", "dinner"} {
-		s.mockRecipe.EXPECT().
-			FindByMealType(meal).
-			Return([]model.Recipe{
-				{Title: "Meal " + meal, MealType: model.MealType(meal), Calories: 400, ProteinG: 20, FatG: 10, CarbsG: 50},
-			}, nil)
-	}
+	s.mockRecipe.EXPECT().
+		FindByMealTypeExcludeIDs(gomock.Any(), gomock.Any()).
+		Return([]model.Recipe{}, nil).AnyTimes()
+
+	s.mockRecipe.EXPECT().
+		FindByMealType(gomock.Any()).
+		Return([]model.Recipe{{Title: "Default", MealType: model.MealBreakfast, Calories: 200, ProteinG: 10, FatG: 5, CarbsG: 30}}, nil).AnyTimes()
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/api/v1/nutrition/today", nil)
@@ -472,10 +472,9 @@ func TestGetNutrition_FullDay(t *testing.T) {
 	var resp map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &resp)
 	assert.Equal(t, "final", resp["status"])
-	assert.InDelta(t, 70*30+150, resp["calories_target"].(float64), 1)
-	assert.NotEmpty(t, resp["breakfast"])
-	assert.NotEmpty(t, resp["lunch"])
-	assert.NotEmpty(t, resp["dinner"])
+	// BMR for 70kg/175cm/25y/female = 1507.75, TDEE = 1809.3, + 150 from activity = 1959.3
+	assert.InDelta(t, 1959.3, resp["calories_target"].(float64), 1)
+	assert.NotEmpty(t, resp["meals"])
 }
 
 func TestGetNutrition_WithMeal(t *testing.T) {
@@ -483,7 +482,7 @@ func TestGetNutrition_WithMeal(t *testing.T) {
 	defer s.ctrl.Finish()
 
 	s.mockRecipe.EXPECT().
-		FindByMealType("lunch").
+		FindByMealTypeExcludeIDs("lunch", gomock.Any()).
 		Return([]model.Recipe{
 			{Title: "Chicken Salad", MealType: model.MealLunch, Calories: 500, ProteinG: 35, FatG: 15, CarbsG: 30},
 		}, nil)
@@ -497,7 +496,10 @@ func TestGetNutrition_WithMeal(t *testing.T) {
 	var resp map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &resp)
 	lunch := resp["lunch"].(map[string]interface{})
-	assert.Equal(t, "Chicken Salad", lunch["dish"])
+	dishes := lunch["dishes"].([]interface{})
+	require.Len(t, dishes, 1)
+	firstDish := dishes[0].(map[string]interface{})
+	assert.Equal(t, "Chicken Salad", firstDish["title"])
 }
 
 func TestGetNutrition_InvalidMeal(t *testing.T) {
