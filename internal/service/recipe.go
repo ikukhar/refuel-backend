@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
-	"fmt"
 
 	"github.com/ikukhar/refuel-backend/internal/model"
 )
@@ -144,13 +144,18 @@ func marshalSlice(s []string) string {
 	if len(s) == 0 {
 		return "[]"
 	}
-	b := "["
-	for i, v := range s {
-		if i > 0 {
-			b += ","
-		}
-		b += fmt.Sprintf("%q", v)
+	b, err := json.Marshal(s)
+	if err != nil {
+		return "[]"
 	}
-	b += "]"
-	return b
+	return string(b)
+}
+
+func unmarshalSlice(s string) []string {
+	if s == "" || s == "[]" {
+		return nil
+	}
+	var result []string
+	json.Unmarshal([]byte(s), &result)
+	return result
 }

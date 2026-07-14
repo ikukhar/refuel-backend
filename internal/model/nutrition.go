@@ -4,8 +4,8 @@ import "time"
 
 type DailyNutrition struct {
 	ID                uint      `gorm:"primaryKey" json:"id"`
-	UserID            uint      `gorm:"index:idx_nutrition_user_date,not null" json:"user_id"`
-	Date              time.Time `gorm:"index:idx_nutrition_user_date,not null" json:"date"`
+	UserID            uint      `gorm:"uniqueIndex:idx_nutrition_user_date,not null" json:"user_id"`
+	Date              time.Time `gorm:"uniqueIndex:idx_nutrition_user_date,not null" json:"date"`
 	CaloriesTarget    float64   `gorm:"not null" json:"calories_target"`
 	ProteinG          float64   `gorm:"not null" json:"protein_g"`
 	FatG              float64   `gorm:"not null" json:"fat_g"`

@@ -11,12 +11,14 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/ikukhar/refuel-backend/internal/config"
 	"github.com/ikukhar/refuel-backend/internal/handler"
 	adminHandler "github.com/ikukhar/refuel-backend/internal/handler/admin"
 	"github.com/ikukhar/refuel-backend/internal/model"
 	"github.com/ikukhar/refuel-backend/internal/router"
 	"github.com/ikukhar/refuel-backend/internal/service"
 	mockrepo "github.com/ikukhar/refuel-backend/internal/service/mocks"
+	"github.com/ikukhar/refuel-backend/internal/testutil"
 	"github.com/ikukhar/refuel-backend/pkg/jwt"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
@@ -66,7 +68,9 @@ func setupAPI(t *testing.T) *apiSuite {
 	recipeAdminH := adminHandler.NewRecipeAdminHandler(nil)
 	userMealPeriodsAdminH := adminHandler.NewUserMealPeriodAdminHandler(nil)
 
-	r := router.Setup(logger, jwtManager, authH, userH, activityH, nutritionH, recipeAdminH, userMealPeriodsAdminH)
+	cfg := &config.Config{AdminUser: "admin", AdminPass: "admin"}
+
+	r := router.Setup(cfg, logger, jwtManager, authH, userH, activityH, nutritionH, recipeAdminH, userMealPeriodsAdminH)
 
 	return &apiSuite{
 		r:          r,
@@ -81,7 +85,7 @@ func setupAPI(t *testing.T) *apiSuite {
 
 func authHeader(t *testing.T, jm *jwt.Manager, userID uint) string {
 	t.Helper()
-	token, err := jm.GenerateAccessToken(userID, "test@test.com")
+	token, err := jm.GenerateAccessToken(userID, "test@test.com", 0)
 	require.NoError(t, err)
 	return "Bearer " + token
 }
@@ -231,12 +235,16 @@ func TestRefresh_Success(t *testing.T) {
 	s := setupAPI(t)
 	defer s.ctrl.Finish()
 
-	refresh, err := s.jwtManager.GenerateRefreshToken(3, "test@test.com")
+	refresh, err := s.jwtManager.GenerateRefreshToken(3, "test@test.com", 0)
 	require.NoError(t, err)
 
 	s.mockUser.EXPECT().
 		FindByID(uint(3)).
 		Return(&model.User{ID: 3, Email: "test@test.com"}, nil)
+
+	s.mockUser.EXPECT().
+		Update(gomock.Any()).
+		Return(nil)
 
 	body := fmt.Sprintf(`{"refresh_token":"%s"}`, refresh)
 	w := httptest.NewRecorder()
@@ -438,7 +446,7 @@ func TestGetNutrition_FullDay(t *testing.T) {
 	now := time.Now().Truncate(24 * time.Hour)
 
 	s.mockNutr.EXPECT().
-		FindByUserAndDate(uint(1), now).
+		FindByUserAndDate(gomock.Any(), uint(1), now).
 		Return(nil, gorm.ErrRecordNotFound)
 
 	s.mockUser.EXPECT().
@@ -448,11 +456,11 @@ func TestGetNutrition_FullDay(t *testing.T) {
 	s.mockAct.EXPECT().
 		FindByUserID(uint(1), &now, nil, 50, 0).
 		Return([]model.Activity{
-			{ID: 1, Calories: ptrInt(300)},
+			{ID: 1, Calories: testutil.PtrInt(300)},
 		}, nil)
 
 	s.mockNutr.EXPECT().
-		Upsert(gomock.Any()).
+		Upsert(gomock.Any(), gomock.Any()).
 		Return(nil)
 
 	s.mockRecipe.EXPECT().
@@ -545,4 +553,4 @@ func TestProtectedEndpoints_RejectWithoutAuth(t *testing.T) {
 	}
 }
 
-func ptrInt(v int) *int { return &v }
+var _ = testutil.PtrInt

@@ -16,10 +16,14 @@ func NewNutritionHandler(nutritionService *service.NutritionService) *NutritionH
 }
 
 func (h *NutritionHandler) GetToday(c *gin.Context) {
-	userID, _ := c.Get("user_id")
+	userID, ok := userIDFromContext(c)
+	if !ok {
+		abortUnauthorized(c)
+		return
+	}
 
 	if meal := c.Query("meal"); meal != "" {
-		mealResp, err := h.nutritionService.GetMeal(c.Request.Context(), userID.(uint), meal)
+		mealResp, err := h.nutritionService.GetMeal(c.Request.Context(), userID, meal)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -28,7 +32,7 @@ func (h *NutritionHandler) GetToday(c *gin.Context) {
 		return
 	}
 
-	nutrition, err := h.nutritionService.GetToday(c.Request.Context(), userID.(uint))
+	nutrition, err := h.nutritionService.GetToday(c.Request.Context(), userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

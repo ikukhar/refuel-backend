@@ -169,10 +169,8 @@ func (r *RecipeRepository) SeedRecipes() error {
 			Ingredients: `["авокадо 1шт","креветки отварные 80г","лимонный сок 1ч.л.","оливковое масло 1ч.л.","перец чёрный"]`, Steps: `["Разрезать авокадо пополам, удалить косточку","Смешать креветки с лимоном и маслом","Выложить в половинки авокадо"]`},
 	}
 
-	for i := range recipes {
-		if err := r.db.Create(&recipes[i]).Error; err != nil {
-			return err
-		}
+	if err := r.db.Create(&recipes).Error; err != nil {
+		return err
 	}
 	return nil
 }

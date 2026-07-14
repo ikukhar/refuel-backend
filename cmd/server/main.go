@@ -1,8 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/ikukhar/refuel-backend/internal/config"
 	"github.com/ikukhar/refuel-backend/internal/handler"
@@ -43,6 +48,11 @@ func main() {
 		logger.Fatal().Err(err).Msg("failed to run migrations")
 	}
 
+	// ensure unique constraint on (user_id, date) for ON CONFLICT DO UPDATE
+	db.Exec(`DELETE FROM daily_nutritions WHERE id NOT IN (SELECT DISTINCT ON (user_id, date) id FROM daily_nutritions)`)
+	db.Exec(`DROP INDEX IF EXISTS idx_nutrition_user_date`)
+	db.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_nutrition_user_date ON daily_nutritions (user_id, date)`)
+
 	recipeRepo := repository.NewRecipeRepository(db)
 	if err := recipeRepo.SeedRecipes(); err != nil {
 		logger.Fatal().Err(err).Msg("failed to seed recipes")
@@ -67,11 +77,33 @@ func main() {
 	recipeAdminHandler := adminHandler.NewRecipeAdminHandler(recipeRepo)
 	userMealPeriodsAdminHandler := adminHandler.NewUserMealPeriodAdminHandler(userMealPeriodsRepo)
 
-	r := router.Setup(logger, jwtManager, authHandler, userHandler, activityHandler, nutritionHandler, recipeAdminHandler, userMealPeriodsAdminHandler)
+	r := router.Setup(cfg, logger, jwtManager, authHandler, userHandler, activityHandler, nutritionHandler, recipeAdminHandler, userMealPeriodsAdminHandler)
 
 	addr := fmt.Sprintf(":%d", cfg.AppPort)
-	logger.Info().Str("addr", addr).Msg("starting server")
-	if err := r.Run(addr); err != nil {
-		logger.Fatal().Err(err).Msg("server failed")
+	srv := &http.Server{
+		Addr:    addr,
+		Handler: r,
 	}
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		logger.Info().Str("addr", addr).Msg("starting server")
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Fatal().Err(err).Msg("server failed")
+		}
+	}()
+
+	<-quit
+	logger.Info().Msg("shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		logger.Fatal().Err(err).Msg("server forced to shutdown")
+	}
+
+	logger.Info().Msg("server exited")
 }

@@ -10,6 +10,7 @@
 package mocks
 
 import (
+	context "context"
 	reflect "reflect"
 	time "time"
 
@@ -192,32 +193,32 @@ func (m *MockNutritionRepository) EXPECT() *MockNutritionRepositoryMockRecorder 
 }
 
 // FindByUserAndDate mocks base method.
-func (m *MockNutritionRepository) FindByUserAndDate(userID uint, date time.Time) (*model.DailyNutrition, error) {
+func (m *MockNutritionRepository) FindByUserAndDate(ctx context.Context, userID uint, date time.Time) (*model.DailyNutrition, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindByUserAndDate", userID, date)
+	ret := m.ctrl.Call(m, "FindByUserAndDate", ctx, userID, date)
 	ret0, _ := ret[0].(*model.DailyNutrition)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindByUserAndDate indicates an expected call of FindByUserAndDate.
-func (mr *MockNutritionRepositoryMockRecorder) FindByUserAndDate(userID, date any) *gomock.Call {
+func (mr *MockNutritionRepositoryMockRecorder) FindByUserAndDate(ctx, userID, date any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByUserAndDate", reflect.TypeOf((*MockNutritionRepository)(nil).FindByUserAndDate), userID, date)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByUserAndDate", reflect.TypeOf((*MockNutritionRepository)(nil).FindByUserAndDate), ctx, userID, date)
 }
 
 // Upsert mocks base method.
-func (m *MockNutritionRepository) Upsert(n *model.DailyNutrition) error {
+func (m *MockNutritionRepository) Upsert(ctx context.Context, n *model.DailyNutrition) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Upsert", n)
+	ret := m.ctrl.Call(m, "Upsert", ctx, n)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Upsert indicates an expected call of Upsert.
-func (mr *MockNutritionRepositoryMockRecorder) Upsert(n any) *gomock.Call {
+func (mr *MockNutritionRepositoryMockRecorder) Upsert(ctx, n any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Upsert", reflect.TypeOf((*MockNutritionRepository)(nil).Upsert), n)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Upsert", reflect.TypeOf((*MockNutritionRepository)(nil).Upsert), ctx, n)
 }
 
 // MockRecipeRepository is a mock of RecipeRepository interface.

@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/spf13/viper"
@@ -22,7 +23,9 @@ type Config struct {
 	JWTAccessTTL  time.Duration
 	JWTRefreshTTL time.Duration
 
-	LogLevel string
+	LogLevel     string
+	AdminUser    string
+	AdminPass    string
 }
 
 func Load(path string) (*Config, error) {
@@ -38,25 +41,14 @@ func Load(path string) (*Config, error) {
 	viper.SetDefault("JWT_ACCESS_TTL", "15m")
 	viper.SetDefault("JWT_REFRESH_TTL", "72h")
 	viper.SetDefault("LOG_LEVEL", "debug")
+	viper.SetDefault("ADMIN_USER", "admin")
+	viper.SetDefault("ADMIN_PASS", "admin")
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
 			return nil, fmt.Errorf("failed to read config file: %w", err)
 		}
 	}
-
-	viper.BindEnv("APP_ENV")
-	viper.BindEnv("APP_PORT")
-	viper.BindEnv("DB_HOST")
-	viper.BindEnv("DB_PORT")
-	viper.BindEnv("DB_USER")
-	viper.BindEnv("DB_PASSWORD")
-	viper.BindEnv("DB_NAME")
-	viper.BindEnv("DB_SSLMODE")
-	viper.BindEnv("JWT_SECRET")
-	viper.BindEnv("JWT_ACCESS_TTL")
-	viper.BindEnv("JWT_REFRESH_TTL")
-	viper.BindEnv("LOG_LEVEL")
 
 	accessTTL, err := time.ParseDuration(viper.GetString("JWT_ACCESS_TTL"))
 	if err != nil {
@@ -81,6 +73,8 @@ func Load(path string) (*Config, error) {
 		JWTAccessTTL:  accessTTL,
 		JWTRefreshTTL: refreshTTL,
 		LogLevel:      viper.GetString("LOG_LEVEL"),
+		AdminUser:     viper.GetString("ADMIN_USER"),
+		AdminPass:     viper.GetString("ADMIN_PASS"),
 	}
 
 	return cfg, nil
@@ -89,6 +83,6 @@ func Load(path string) (*Config, error) {
 func (c *Config) DSN() string {
 	return fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-		c.DBHost, c.DBPort, c.DBUser, c.DBPassword, c.DBName, c.DBSSLMode,
+		c.DBHost, c.DBPort, c.DBUser, url.QueryEscape(c.DBPassword), c.DBName, c.DBSSLMode,
 	)
 }

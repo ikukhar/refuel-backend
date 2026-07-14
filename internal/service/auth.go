@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/ikukhar/refuel-backend/internal/model"
 	"github.com/ikukhar/refuel-backend/pkg/jwt"
@@ -62,15 +63,18 @@ func (s *AuthService) Register(ctx context.Context, email, password, name string
 	}
 
 	if err := s.userRepo.Create(user); err != nil {
+		if strings.Contains(err.Error(), "duplicate key") {
+			return nil, errors.New("email already registered")
+		}
 		return nil, err
 	}
 
-	accessToken, err := s.jwtManager.GenerateAccessToken(user.ID, user.Email)
+	accessToken, err := s.jwtManager.GenerateAccessToken(user.ID, user.Email, user.TokenVersion)
 	if err != nil {
 		return nil, err
 	}
 
-	refreshToken, err := s.jwtManager.GenerateRefreshToken(user.ID, user.Email)
+	refreshToken, err := s.jwtManager.GenerateRefreshToken(user.ID, user.Email, user.TokenVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -103,12 +107,12 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*AuthR
 		return nil, errors.New("invalid email or password")
 	}
 
-	accessToken, err := s.jwtManager.GenerateAccessToken(user.ID, user.Email)
+	accessToken, err := s.jwtManager.GenerateAccessToken(user.ID, user.Email, user.TokenVersion)
 	if err != nil {
 		return nil, err
 	}
 
-	refreshToken, err := s.jwtManager.GenerateRefreshToken(user.ID, user.Email)
+	refreshToken, err := s.jwtManager.GenerateRefreshToken(user.ID, user.Email, user.TokenVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +134,7 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*AuthR
 
 func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (*AuthResponse, error) {
 	s.logger.Debug().Str("refresh_token", refreshToken).Msg("Refreshing access token")
-	
+
 	claims, err := s.jwtManager.ValidateToken(refreshToken)
 	if err != nil {
 		return nil, errors.New("invalid or expired refresh token")
@@ -141,12 +145,21 @@ func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (*AuthRe
 		return nil, errors.New("user not found")
 	}
 
-	accessToken, err := s.jwtManager.GenerateAccessToken(user.ID, user.Email)
+	if claims.TokenVersion != user.TokenVersion {
+		return nil, errors.New("refresh token has been revoked")
+	}
+
+	user.TokenVersion++
+	if err := s.userRepo.Update(user); err != nil {
+		return nil, err
+	}
+
+	accessToken, err := s.jwtManager.GenerateAccessToken(user.ID, user.Email, user.TokenVersion)
 	if err != nil {
 		return nil, err
 	}
 
-	newRefreshToken, err := s.jwtManager.GenerateRefreshToken(user.ID, user.Email)
+	newRefreshToken, err := s.jwtManager.GenerateRefreshToken(user.ID, user.Email, user.TokenVersion)
 	if err != nil {
 		return nil, err
 	}

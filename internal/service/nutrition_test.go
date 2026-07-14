@@ -27,7 +27,7 @@ func TestNutritionService_GetToday_CreatesBaseline(t *testing.T) {
 	now := time.Now().Truncate(24 * time.Hour)
 
 	mockNutritionRepo.EXPECT().
-		FindByUserAndDate(uint(1), now).
+		FindByUserAndDate(gomock.Any(), uint(1), now).
 		Return(nil, gorm.ErrRecordNotFound)
 
 	mockUserRepo.EXPECT().
@@ -39,7 +39,7 @@ func TestNutritionService_GetToday_CreatesBaseline(t *testing.T) {
 		Return([]model.Activity{}, nil)
 
 	mockNutritionRepo.EXPECT().
-		Upsert(gomock.Any()).
+		Upsert(gomock.Any(), gomock.Any()).
 		Return(nil)
 
 	mockRecipeRepo.EXPECT().
@@ -73,7 +73,7 @@ func TestNutritionService_GetToday_WithWeight(t *testing.T) {
 	now := time.Now().Truncate(24 * time.Hour)
 
 	mockNutritionRepo.EXPECT().
-		FindByUserAndDate(uint(1), now).
+		FindByUserAndDate(gomock.Any(), uint(1), now).
 		Return(nil, gorm.ErrRecordNotFound)
 
 	mockUserRepo.EXPECT().
@@ -85,8 +85,8 @@ func TestNutritionService_GetToday_WithWeight(t *testing.T) {
 		Return([]model.Activity{}, nil)
 
 	mockNutritionRepo.EXPECT().
-		Upsert(gomock.Any()).
-		DoAndReturn(func(n *model.DailyNutrition) error {
+		Upsert(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(_ context.Context, n *model.DailyNutrition) error {
 			assert.InDelta(t, 2136.0, n.CaloriesTarget, 1)
 			assert.InDelta(t, 160.2, n.ProteinG, 1)
 			return nil

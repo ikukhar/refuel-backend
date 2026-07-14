@@ -7,6 +7,7 @@ import (
 
 	"github.com/ikukhar/refuel-backend/internal/model"
 	"github.com/ikukhar/refuel-backend/internal/service/mocks"
+	"github.com/ikukhar/refuel-backend/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -22,9 +23,9 @@ func TestActivityService_Create_Success(t *testing.T) {
 	now := time.Now()
 	input := CreateActivityInput{
 		Type:      "run",
-		Distance:  float64Ptr(5000),
-		Duration:  intPtr(1800),
-		Calories:  intPtr(350),
+		Distance:  testutil.PtrFloat64(5000),
+		Duration:  testutil.PtrInt(1800),
+		Calories:  testutil.PtrInt(350),
 		StartedAt: now,
 		Source:    "manual",
 		SourceID:  "unique-id-123",
@@ -48,8 +49,8 @@ func TestActivityService_Create_Success(t *testing.T) {
 	require.NotNil(t, resp)
 	assert.True(t, created)
 	assert.Equal(t, "run", resp.Type)
-	assert.Equal(t, float64Ptr(5000), resp.Distance)
-	assert.Equal(t, intPtr(1800), resp.Duration)
+	assert.Equal(t, testutil.PtrFloat64(5000), resp.Distance)
+	assert.Equal(t, testutil.PtrInt(1800), resp.Duration)
 	assert.Equal(t, "manual", resp.Source)
 }
 
@@ -116,5 +117,4 @@ func TestActivityService_Create_InvalidType(t *testing.T) {
 	assert.Contains(t, err.Error(), "run")
 }
 
-func intPtr(v int) *int { return &v }
-func float64Ptr(v float64) *float64 { return &v }
+var _ = testutil.PtrInt

@@ -13,6 +13,12 @@ func NewUserMealPeriodRepository(db *gorm.DB) *UserMealPeriodRepository {
 	return &UserMealPeriodRepository{db: db}
 }
 
+func (r *UserMealPeriodRepository) FindAll() ([]model.UserMealPeriod, error) {
+	var periods []model.UserMealPeriod
+	err := r.db.Order("user_id, start_hour, start_minute").Find(&periods).Error
+	return periods, err
+}
+
 func (r *UserMealPeriodRepository) FindByUserID(userID uint) ([]model.UserMealPeriod, error) {
 	var periods []model.UserMealPeriod
 	err := r.db.Where("user_id = ?", userID).Order("start_hour, start_minute").Find(&periods).Error

@@ -18,7 +18,7 @@ func NewUserMealPeriodAdminHandler(repo *repository.UserMealPeriodRepository) *U
 }
 
 func (h *UserMealPeriodAdminHandler) List(c *gin.Context) {
-	periods, err := h.repo.FindByUserID(0)
+	periods, err := h.repo.FindAll()
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return

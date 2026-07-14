@@ -29,7 +29,11 @@ type CreateActivityRequest struct {
 }
 
 func (h *ActivityHandler) Create(c *gin.Context) {
-	userID, _ := c.Get("user_id")
+	userID, ok := userIDFromContext(c)
+	if !ok {
+		abortUnauthorized(c)
+		return
+	}
 
 	var req CreateActivityRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -48,7 +52,7 @@ func (h *ActivityHandler) Create(c *gin.Context) {
 		SourceID:  req.SourceID,
 	}
 
-	resp, created, err := h.activityService.Create(c.Request.Context(), userID.(uint), input)
+	resp, created, err := h.activityService.Create(c.Request.Context(), userID, input)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -62,13 +66,17 @@ func (h *ActivityHandler) Create(c *gin.Context) {
 }
 
 func (h *ActivityHandler) List(c *gin.Context) {
-	userID, _ := c.Get("user_id")
+	userID, ok := userIDFromContext(c)
+	if !ok {
+		abortUnauthorized(c)
+		return
+	}
 
 	from, to := parseDateRange(c)
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
 
-	activities, err := h.activityService.List(c.Request.Context(), userID.(uint), from, to, limit, offset)
+	activities, err := h.activityService.List(c.Request.Context(), userID, from, to, limit, offset)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

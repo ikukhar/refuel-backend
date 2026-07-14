@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/ikukhar/refuel-backend/internal/config"
 	"github.com/ikukhar/refuel-backend/internal/handler"
 	adminHandler "github.com/ikukhar/refuel-backend/internal/handler/admin"
 	"github.com/ikukhar/refuel-backend/internal/middleware"
@@ -13,6 +14,7 @@ import (
 )
 
 func Setup(
+	cfg *config.Config,
 	logger zerolog.Logger,
 	jwtManager *jwt.Manager,
 	authHandler *handler.AuthHandler,
@@ -58,6 +60,7 @@ func Setup(
 	}
 
 	admin := r.Group("/admin")
+	admin.Use(middleware.AdminAuth(cfg.AdminUser, cfg.AdminPass))
 	{
 		admin.GET("/", dashboard)
 		admin.GET("/recipes", recipeAdminHandler.List)

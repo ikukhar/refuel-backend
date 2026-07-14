@@ -11,6 +11,8 @@ import (
 	"github.com/ikukhar/refuel-backend/internal/model"
 )
 
+var rng = rand.New(rand.NewSource(time.Now().UnixNano()))
+
 type NutritionService struct {
 	nutritionRepo NutritionRepository
 	activityRepo  ActivityRepository
@@ -91,7 +93,7 @@ func (s *NutritionService) pickRecipesForMeal(mealType model.MealType, targetCal
 		}
 	}
 
-	perm := rand.Perm(len(recipes))
+	perm := rng.Perm(len(recipes))
 	var dishes []DishResponse
 	totalCalories := 0
 	threshold := int(math.Round(targetCalories * 0.85))
@@ -117,7 +119,7 @@ func (s *NutritionService) pickRecipesForMeal(mealType model.MealType, targetCal
 }
 
 func mealSlotTime(period model.MealPeriod) string {
-	h := period.StartHour + rand.Intn(2)
+	h := period.StartHour + rng.Intn(2)
 	m := period.StartMinute
 	if h > 23 {
 		h = 23
@@ -149,8 +151,9 @@ func parsePreviousRecipeIDs(s string) []uint {
 func (s *NutritionService) GetToday(ctx context.Context, userID uint) (*NutritionResponse, error) {
 	now := time.Now().Truncate(24 * time.Hour)
 
-	existing, err := s.nutritionRepo.FindByUserAndDate(userID, now)
+	existing, err := s.nutritionRepo.FindByUserAndDate(ctx, userID, now)
 	if err == nil {
+		// context is used for cancellation; pass background as we already have data
 		return s.buildResponseFromNutrition(existing), nil
 	}
 
@@ -202,7 +205,7 @@ func (s *NutritionService) GetToday(ctx context.Context, userID uint) (*Nutritio
 	idsJSON, _ := json.Marshal(collectRecipeIDs(resp.Meals))
 	nutrition.PreviousRecipeIDs = string(idsJSON)
 
-	if err := s.nutritionRepo.Upsert(nutrition); err != nil {
+	if err := s.nutritionRepo.Upsert(ctx, nutrition); err != nil {
 		return nil, err
 	}
 

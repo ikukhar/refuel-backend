@@ -16,9 +16,13 @@ func NewUserHandler(userService *service.UserService) *UserHandler {
 }
 
 func (h *UserHandler) GetProfile(c *gin.Context) {
-	userID, _ := c.Get("user_id")
+	userID, ok := userIDFromContext(c)
+	if !ok {
+		abortUnauthorized(c)
+		return
+	}
 
-	user, err := h.userService.GetByID(c.Request.Context(), userID.(uint))
+	user, err := h.userService.GetByID(c.Request.Context(), userID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -36,7 +40,11 @@ type UpdateProfileRequest struct {
 }
 
 func (h *UserHandler) UpdateProfile(c *gin.Context) {
-	userID, _ := c.Get("user_id")
+	userID, ok := userIDFromContext(c)
+	if !ok {
+		abortUnauthorized(c)
+		return
+	}
 
 	var req UpdateProfileRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -44,7 +52,7 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	if err := h.userService.UpdateProfile(c.Request.Context(), userID.(uint), req.Name, req.Weight, req.Height, req.Age, req.Gender); err != nil {
+	if err := h.userService.UpdateProfile(c.Request.Context(), userID, req.Name, req.Weight, req.Height, req.Age, req.Gender); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

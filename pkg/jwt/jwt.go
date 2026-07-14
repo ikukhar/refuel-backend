@@ -7,12 +7,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type Claims struct {
-	UserID uint   `json:"user_id"`
-	Email  string `json:"email"`
-	jwt.RegisteredClaims
-}
-
 type Manager struct {
 	secret     []byte
 	accessTTL  time.Duration
@@ -27,10 +21,18 @@ func NewManager(secret string, accessTTL, refreshTTL time.Duration) *Manager {
 	}
 }
 
-func (m *Manager) GenerateAccessToken(userID uint, email string) (string, error) {
+type Claims struct {
+	UserID       uint   `json:"user_id"`
+	Email        string `json:"email"`
+	TokenVersion int    `json:"token_version"`
+	jwt.RegisteredClaims
+}
+
+func (m *Manager) GenerateAccessToken(userID uint, email string, tokenVersion int) (string, error) {
 	claims := &Claims{
-		UserID: userID,
-		Email:  email,
+		UserID:       userID,
+		Email:        email,
+		TokenVersion: tokenVersion,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.accessTTL)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -41,10 +43,11 @@ func (m *Manager) GenerateAccessToken(userID uint, email string) (string, error)
 	return token.SignedString(m.secret)
 }
 
-func (m *Manager) GenerateRefreshToken(userID uint, email string) (string, error) {
+func (m *Manager) GenerateRefreshToken(userID uint, email string, tokenVersion int) (string, error) {
 	claims := &Claims{
-		UserID: userID,
-		Email:  email,
+		UserID:       userID,
+		Email:        email,
+		TokenVersion: tokenVersion,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.refreshTTL)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

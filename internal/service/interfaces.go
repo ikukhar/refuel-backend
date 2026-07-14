@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"time"
 
 	"github.com/ikukhar/refuel-backend/internal/model"
@@ -20,8 +21,8 @@ type ActivityRepository interface {
 }
 
 type NutritionRepository interface {
-	Upsert(n *model.DailyNutrition) error
-	FindByUserAndDate(userID uint, date time.Time) (*model.DailyNutrition, error)
+	Upsert(ctx context.Context, n *model.DailyNutrition) error
+	FindByUserAndDate(ctx context.Context, userID uint, date time.Time) (*model.DailyNutrition, error)
 }
 
 type RecipeRepository interface {

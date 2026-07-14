@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ikukhar/refuel-backend/internal/model"
+	"github.com/ikukhar/refuel-backend/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -18,9 +19,9 @@ func TestActivityRepository_CreateAndFindByUserID(t *testing.T) {
 	activity := &model.Activity{
 		UserID:    user.ID,
 		Type:      "run",
-		Distance:  float64Ptr(5000),
-		Duration:  intPtr(1800),
-		Calories:  intPtr(350),
+		Distance:  testutil.PtrFloat64(5000),
+		Duration:  testutil.PtrInt(1800),
+		Calories:  testutil.PtrInt(350),
 		StartedAt: now,
 		Source:    "manual",
 		SourceID:  "src-" + time.Now().Format("150405.000"),
@@ -94,6 +95,4 @@ func TestActivityRepository_FindBySourceID_NotFound(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func intPtr(v int) *int { return &v }
-
-func float64Ptr(v float64) *float64 { return &v }
+var _ = testutil.PtrInt

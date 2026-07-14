@@ -10,6 +10,7 @@ import (
 	"github.com/ikukhar/refuel-backend/internal/model"
 	"github.com/ikukhar/refuel-backend/internal/service"
 	"github.com/ikukhar/refuel-backend/internal/service/mocks"
+	"github.com/ikukhar/refuel-backend/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -41,7 +42,7 @@ func TestNutritionHandler_GetToday_Error(t *testing.T) {
 	r, mockN, _, mockU, _ := setupNutritionRouter(t)
 
 	mockN.EXPECT().
-		FindByUserAndDate(gomock.Any(), gomock.Any()).
+		FindByUserAndDate(gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(nil, assert.AnError)
 
 	mockU.EXPECT().
@@ -132,7 +133,7 @@ func TestNutritionHandler_GetToday_FullResponse(t *testing.T) {
 	h := NewNutritionHandler(svc)
 
 	mockN.EXPECT().
-		FindByUserAndDate(gomock.Any(), gomock.Any()).
+		FindByUserAndDate(gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(nil, assert.AnError)
 
 	mockU.EXPECT().
@@ -144,7 +145,7 @@ func TestNutritionHandler_GetToday_FullResponse(t *testing.T) {
 		Return([]model.Activity{}, nil)
 
 	mockN.EXPECT().
-		Upsert(gomock.Any()).
+		Upsert(gomock.Any(), gomock.Any()).
 		Return(nil)
 
 	mockR.EXPECT().
@@ -175,4 +176,4 @@ func TestNutritionHandler_GetToday_FullResponse(t *testing.T) {
 	assert.NotEmpty(t, resp["meals"])
 }
 
-func float64Ptr(v float64) *float64 { return &v }
+var _ = testutil.PtrFloat64

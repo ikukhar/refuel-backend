@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
@@ -41,28 +42,25 @@ func toViews(recipes []model.Recipe) []recipeView {
 }
 
 func parseJSONList(s string) []string {
-	s = strings.TrimSpace(s)
-	s = strings.Trim(s, "[]")
-	if s == "" {
+	if s == "" || s == "[]" {
 		return nil
 	}
-	parts := strings.Split(s, ",")
-	lines := make([]string, 0, len(parts))
-	for _, p := range parts {
-		l := strings.Trim(strings.TrimSpace(p), "\"")
-		if l != "" {
-			lines = append(lines, l)
-		}
+	var result []string
+	if err := json.Unmarshal([]byte(s), &result); err != nil {
+		return nil
 	}
-	return lines
+	return result
 }
 
 func toJSONList(lines []string) string {
-	escaped := make([]string, len(lines))
-	for i, l := range lines {
-		escaped[i] = `"` + l + `"`
+	if len(lines) == 0 {
+		return "[]"
 	}
-	return "[" + strings.Join(escaped, ",") + "]"
+	b, err := json.Marshal(lines)
+	if err != nil {
+		return "[]"
+	}
+	return string(b)
 }
 
 func (h *RecipeAdminHandler) List(c *gin.Context) {
