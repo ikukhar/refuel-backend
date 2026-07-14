@@ -168,32 +168,32 @@ func (mr *MockActivityRepositoryMockRecorder) FindByUserID(userID, from, to, lim
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByUserID", reflect.TypeOf((*MockActivityRepository)(nil).FindByUserID), userID, from, to, limit, offset)
 }
 
-// MockNutritionRepository is a mock of NutritionRepository interface.
-type MockNutritionRepository struct {
+// MockDailyNutritionRepository is a mock of DailyNutritionRepository interface.
+type MockDailyNutritionRepository struct {
 	ctrl     *gomock.Controller
-	recorder *MockNutritionRepositoryMockRecorder
+	recorder *MockDailyNutritionRepositoryMockRecorder
 	isgomock struct{}
 }
 
-// MockNutritionRepositoryMockRecorder is the mock recorder for MockNutritionRepository.
-type MockNutritionRepositoryMockRecorder struct {
-	mock *MockNutritionRepository
+// MockDailyNutritionRepositoryMockRecorder is the mock recorder for MockDailyNutritionRepository.
+type MockDailyNutritionRepositoryMockRecorder struct {
+	mock *MockDailyNutritionRepository
 }
 
-// NewMockNutritionRepository creates a new mock instance.
-func NewMockNutritionRepository(ctrl *gomock.Controller) *MockNutritionRepository {
-	mock := &MockNutritionRepository{ctrl: ctrl}
-	mock.recorder = &MockNutritionRepositoryMockRecorder{mock}
+// NewMockDailyNutritionRepository creates a new mock instance.
+func NewMockDailyNutritionRepository(ctrl *gomock.Controller) *MockDailyNutritionRepository {
+	mock := &MockDailyNutritionRepository{ctrl: ctrl}
+	mock.recorder = &MockDailyNutritionRepositoryMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockNutritionRepository) EXPECT() *MockNutritionRepositoryMockRecorder {
+func (m *MockDailyNutritionRepository) EXPECT() *MockDailyNutritionRepositoryMockRecorder {
 	return m.recorder
 }
 
 // FindByUserAndDate mocks base method.
-func (m *MockNutritionRepository) FindByUserAndDate(ctx context.Context, userID uint, date time.Time) (*model.DailyNutrition, error) {
+func (m *MockDailyNutritionRepository) FindByUserAndDate(ctx context.Context, userID uint, date time.Time) (*model.DailyNutrition, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindByUserAndDate", ctx, userID, date)
 	ret0, _ := ret[0].(*model.DailyNutrition)
@@ -202,13 +202,13 @@ func (m *MockNutritionRepository) FindByUserAndDate(ctx context.Context, userID 
 }
 
 // FindByUserAndDate indicates an expected call of FindByUserAndDate.
-func (mr *MockNutritionRepositoryMockRecorder) FindByUserAndDate(ctx, userID, date any) *gomock.Call {
+func (mr *MockDailyNutritionRepositoryMockRecorder) FindByUserAndDate(ctx, userID, date any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByUserAndDate", reflect.TypeOf((*MockNutritionRepository)(nil).FindByUserAndDate), ctx, userID, date)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByUserAndDate", reflect.TypeOf((*MockDailyNutritionRepository)(nil).FindByUserAndDate), ctx, userID, date)
 }
 
 // Upsert mocks base method.
-func (m *MockNutritionRepository) Upsert(ctx context.Context, n *model.DailyNutrition) error {
+func (m *MockDailyNutritionRepository) Upsert(ctx context.Context, n *model.DailyNutrition) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Upsert", ctx, n)
 	ret0, _ := ret[0].(error)
@@ -216,9 +216,9 @@ func (m *MockNutritionRepository) Upsert(ctx context.Context, n *model.DailyNutr
 }
 
 // Upsert indicates an expected call of Upsert.
-func (mr *MockNutritionRepositoryMockRecorder) Upsert(ctx, n any) *gomock.Call {
+func (mr *MockDailyNutritionRepositoryMockRecorder) Upsert(ctx, n any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Upsert", reflect.TypeOf((*MockNutritionRepository)(nil).Upsert), ctx, n)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Upsert", reflect.TypeOf((*MockDailyNutritionRepository)(nil).Upsert), ctx, n)
 }
 
 // MockRecipeRepository is a mock of RecipeRepository interface.

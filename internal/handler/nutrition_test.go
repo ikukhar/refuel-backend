@@ -16,12 +16,12 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func setupNutritionRouter(t *testing.T) (*gin.Engine, *mocks.MockNutritionRepository, *mocks.MockActivityRepository, *mocks.MockUserRepository, *mocks.MockRecipeRepository) {
+func setupNutritionRouter(t *testing.T) (*gin.Engine, *mocks.MockDailyNutritionRepository, *mocks.MockActivityRepository, *mocks.MockUserRepository, *mocks.MockRecipeRepository) {
 	t.Helper()
 	gin.SetMode(gin.TestMode)
 
 	ctrl := gomock.NewController(t)
-	mockNutrition := mocks.NewMockNutritionRepository(ctrl)
+	mockNutrition := mocks.NewMockDailyNutritionRepository(ctrl)
 	mockActivity := mocks.NewMockActivityRepository(ctrl)
 	mockUser := mocks.NewMockUserRepository(ctrl)
 	mockRecipe := mocks.NewMockRecipeRepository(ctrl)
@@ -124,7 +124,7 @@ func TestNutritionHandler_GetToday_FullResponse(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockN := mocks.NewMockNutritionRepository(ctrl)
+	mockN := mocks.NewMockDailyNutritionRepository(ctrl)
 	mockA := mocks.NewMockActivityRepository(ctrl)
 	mockU := mocks.NewMockUserRepository(ctrl)
 	mockR := mocks.NewMockRecipeRepository(ctrl)
@@ -141,7 +141,7 @@ func TestNutritionHandler_GetToday_FullResponse(t *testing.T) {
 		Return(&model.User{ID: 1, Name: "Test", Weight: 70, Height: 175, Age: 25, Gender: "female"}, nil)
 
 	mockA.EXPECT().
-		FindByUserID(uint(1), gomock.Any(), nil, 50, 0).
+		FindByUserID(uint(1), gomock.Any(), nil, 200, 0).
 		Return([]model.Activity{}, nil)
 
 	mockN.EXPECT().

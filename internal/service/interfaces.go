@@ -20,7 +20,7 @@ type ActivityRepository interface {
 	FindBySourceID(sourceID string) (*model.Activity, error)
 }
 
-type NutritionRepository interface {
+type DailyNutritionRepository interface {
 	Upsert(ctx context.Context, n *model.DailyNutrition) error
 	FindByUserAndDate(ctx context.Context, userID uint, date time.Time) (*model.DailyNutrition, error)
 }

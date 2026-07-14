@@ -62,7 +62,7 @@ func main() {
 
 	userRepo := repository.NewUserRepository(db)
 	activityRepo := repository.NewActivityRepository(db)
-	nutritionRepo := repository.NewNutritionRepository(db)
+	nutritionRepo := repository.NewDailyNutritionRepository(db)
 	userMealPeriodsRepo := repository.NewUserMealPeriodRepository(db)
 
 	authService := service.NewAuthService(userRepo, jwtManager, logger)

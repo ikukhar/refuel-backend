@@ -17,7 +17,7 @@ func TestNutritionService_GetToday_CreatesBaseline(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockNutritionRepo := mocks.NewMockNutritionRepository(ctrl)
+	mockNutritionRepo := mocks.NewMockDailyNutritionRepository(ctrl)
 	mockActivityRepo := mocks.NewMockActivityRepository(ctrl)
 	mockUserRepo := mocks.NewMockUserRepository(ctrl)
 	mockRecipeRepo := mocks.NewMockRecipeRepository(ctrl)
@@ -35,7 +35,7 @@ func TestNutritionService_GetToday_CreatesBaseline(t *testing.T) {
 		Return(&model.User{ID: 1, Name: "Test"}, nil)
 
 	mockActivityRepo.EXPECT().
-		FindByUserID(uint(1), &now, nil, 50, 0).
+		FindByUserID(uint(1), gomock.Any(), nil, 200, 0).
 		Return([]model.Activity{}, nil)
 
 	mockNutritionRepo.EXPECT().
@@ -63,7 +63,7 @@ func TestNutritionService_GetToday_WithWeight(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockNutritionRepo := mocks.NewMockNutritionRepository(ctrl)
+	mockNutritionRepo := mocks.NewMockDailyNutritionRepository(ctrl)
 	mockActivityRepo := mocks.NewMockActivityRepository(ctrl)
 	mockUserRepo := mocks.NewMockUserRepository(ctrl)
 	mockRecipeRepo := mocks.NewMockRecipeRepository(ctrl)
@@ -81,7 +81,7 @@ func TestNutritionService_GetToday_WithWeight(t *testing.T) {
 		Return(&model.User{ID: 1, Name: "Test", Weight: 80, Height: 180, Age: 30, Gender: "male"}, nil)
 
 	mockActivityRepo.EXPECT().
-		FindByUserID(uint(1), &now, nil, 50, 0).
+		FindByUserID(uint(1), gomock.Any(), nil, 200, 0).
 		Return([]model.Activity{}, nil)
 
 	mockNutritionRepo.EXPECT().
@@ -110,7 +110,7 @@ func TestNutritionService_GetMeal_Valid(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockNutritionRepo := mocks.NewMockNutritionRepository(ctrl)
+	mockNutritionRepo := mocks.NewMockDailyNutritionRepository(ctrl)
 	mockActivityRepo := mocks.NewMockActivityRepository(ctrl)
 	mockUserRepo := mocks.NewMockUserRepository(ctrl)
 	mockRecipeRepo := mocks.NewMockRecipeRepository(ctrl)

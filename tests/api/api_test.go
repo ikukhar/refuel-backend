@@ -34,7 +34,7 @@ type apiSuite struct {
 	ctrl        *gomock.Controller
 	mockUser    *mockrepo.MockUserRepository
 	mockAct     *mockrepo.MockActivityRepository
-	mockNutr    *mockrepo.MockNutritionRepository
+	mockNutr    *mockrepo.MockDailyNutritionRepository
 	mockRecipe  *mockrepo.MockRecipeRepository
 }
 
@@ -53,7 +53,7 @@ func setupAPI(t *testing.T) *apiSuite {
 
 	mockUser := mockrepo.NewMockUserRepository(ctrl)
 	mockAct := mockrepo.NewMockActivityRepository(ctrl)
-	mockNutr := mockrepo.NewMockNutritionRepository(ctrl)
+	mockNutr := mockrepo.NewMockDailyNutritionRepository(ctrl)
 	mockRecipe := mockrepo.NewMockRecipeRepository(ctrl)
 
 	userSvc := service.NewUserService(mockUser)
@@ -454,9 +454,9 @@ func TestGetNutrition_FullDay(t *testing.T) {
 		Return(&model.User{ID: 1, Weight: 70, Height: 175, Age: 25, Gender: "female"}, nil)
 
 	s.mockAct.EXPECT().
-		FindByUserID(uint(1), &now, nil, 50, 0).
+		FindByUserID(uint(1), gomock.Any(), nil, 200, 0).
 		Return([]model.Activity{
-			{ID: 1, Calories: testutil.PtrInt(300)},
+			{ID: 1, Calories: testutil.PtrInt(300), StartedAt: time.Now()},
 		}, nil)
 
 	s.mockNutr.EXPECT().
@@ -480,8 +480,8 @@ func TestGetNutrition_FullDay(t *testing.T) {
 	var resp map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &resp)
 	assert.Equal(t, "final", resp["status"])
-	// BMR for 70kg/175cm/25y/female = 1507.75, TDEE = 1809.3, + 150 from activity = 1959.3
-	assert.InDelta(t, 1959.3, resp["calories_target"].(float64), 1)
+	// BMR for 70kg/175cm/25y/female = 1507.75, TDEE = 1809.3, + 300 from effectiveLoad (today, weight 1.0) = 2109.3
+	assert.InDelta(t, 2109.3, resp["calories_target"].(float64), 1)
 	assert.NotEmpty(t, resp["meals"])
 }
 

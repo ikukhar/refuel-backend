@@ -13,15 +13,33 @@ import (
 
 var rng = rand.New(rand.NewSource(time.Now().UnixNano()))
 
+type dailyLoad struct {
+	Date time.Time
+	Load float64
+}
+
+func effectiveLoad(history []dailyLoad, today time.Time) float64 {
+	var total float64
+	for _, day := range history {
+		daysAgo := int(today.Sub(day.Date).Hours() / 24)
+		if daysAgo > 3 {
+			continue
+		}
+		weight := math.Pow(0.5, float64(daysAgo))
+		total += day.Load * weight
+	}
+	return total
+}
+
 type NutritionService struct {
-	nutritionRepo NutritionRepository
+	nutritionRepo DailyNutritionRepository
 	activityRepo  ActivityRepository
 	userRepo      UserRepository
 	recipeRepo    RecipeRepository
 }
 
 func NewNutritionService(
-	nutritionRepo NutritionRepository,
+	nutritionRepo DailyNutritionRepository,
 	activityRepo ActivityRepository,
 	userRepo UserRepository,
 	recipeRepo RecipeRepository,
@@ -67,10 +85,12 @@ type NutritionResponse struct {
 }
 
 func calcBMR(weight, height float64, age int, gender string) float64 {
+	base := 10*weight + 6.25*height - 5*float64(age)
+
 	if gender == "male" {
-		return 10*weight + 6.25*height - 5*float64(age) + 5
+		return base + 5
 	}
-	return 10*weight + 6.25*height - 5*float64(age) - 161
+	return base - 161
 }
 
 func calcTDEE(bmr float64) float64 {
@@ -149,11 +169,10 @@ func parsePreviousRecipeIDs(s string) []uint {
 }
 
 func (s *NutritionService) GetToday(ctx context.Context, userID uint) (*NutritionResponse, error) {
-	now := time.Now().Truncate(24 * time.Hour)
+	beginOfDay := time.Now().Truncate(24 * time.Hour)
 
-	existing, err := s.nutritionRepo.FindByUserAndDate(ctx, userID, now)
+	existing, err := s.nutritionRepo.FindByUserAndDate(ctx, userID, beginOfDay)
 	if err == nil {
-		// context is used for cancellation; pass background as we already have data
 		return s.buildResponseFromNutrition(existing), nil
 	}
 
@@ -170,29 +189,39 @@ func (s *NutritionService) GetToday(ctx context.Context, userID uint) (*Nutritio
 		tdee = 2000
 	}
 
-	activities, err := s.activityRepo.FindByUserID(userID, &now, nil, 50, 0)
+	threeDaysAgo := beginOfDay.Add(-3 * 24 * time.Hour)
+	activities, err := s.activityRepo.FindByUserID(userID, &threeDaysAgo, nil, 200, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	status := "baseline"
-	caloriesBurned := 0.0
+	loadByDate := make(map[time.Time]float64)
 	for _, a := range activities {
-		if a.Calories != nil {
-			caloriesBurned += float64(*a.Calories)
+		if a.Calories == nil {
+			continue
 		}
+		date := a.StartedAt.Truncate(24 * time.Hour)
+		loadByDate[date] += float64(*a.Calories)
 	}
 
-	if caloriesBurned > 0 {
+	var history []dailyLoad
+	for date, load := range loadByDate {
+		history = append(history, dailyLoad{Date: date, Load: load})
+	}
+
+	effLoad := effectiveLoad(history, beginOfDay)
+
+	status := "baseline"
+	if effLoad > 0 {
 		status = "final"
-		tdee += caloriesBurned * 0.5
+		tdee += effLoad
 	}
 
 	protein, fat, carbs := distributeMacros(tdee)
 
 	nutrition := &model.DailyNutrition{
 		UserID:         userID,
-		Date:           now,
+		Date:           beginOfDay,
 		CaloriesTarget: math.Round(tdee*10) / 10,
 		ProteinG:       protein,
 		FatG:           fat,
