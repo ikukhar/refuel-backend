@@ -446,6 +446,76 @@ func TestListActivities_Success(t *testing.T) {
 	assert.Len(t, resp, 2)
 }
 
+func TestListActivities_FilterByFrom(t *testing.T) {
+	s := setupAPI(t)
+	defer s.ctrl.Finish()
+
+	from := time.Date(2026, 7, 10, 0, 0, 0, 0, time.UTC)
+
+	s.mockAct.EXPECT().
+		FindByUserID(uint(1), &from, nil, 20, 0).
+		Return([]model.Activity{
+			{ID: 3, UserID: 1, Type: model.ActivityRun, Source: "manual"},
+		}, nil)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/v1/activities?from=2026-07-10", nil)
+	req.Header.Set("Authorization", authHeader(t, s.jwtManager, 1))
+	s.r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	var resp []interface{}
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.Len(t, resp, 1)
+}
+
+func TestListActivities_FilterByTo(t *testing.T) {
+	s := setupAPI(t)
+	defer s.ctrl.Finish()
+
+	to := time.Date(2026, 7, 15, 23, 59, 59, 999999999, time.UTC)
+
+	s.mockAct.EXPECT().
+		FindByUserID(uint(1), nil, &to, 20, 0).
+		Return([]model.Activity{
+			{ID: 4, UserID: 1, Type: model.ActivityWalk, Source: "manual"},
+		}, nil)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/v1/activities?to=2026-07-15", nil)
+	req.Header.Set("Authorization", authHeader(t, s.jwtManager, 1))
+	s.r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	var resp []interface{}
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.Len(t, resp, 1)
+}
+
+func TestListActivities_FilterByFromAndTo(t *testing.T) {
+	s := setupAPI(t)
+	defer s.ctrl.Finish()
+
+	from := time.Date(2026, 7, 10, 0, 0, 0, 0, time.UTC)
+	to := time.Date(2026, 7, 15, 23, 59, 59, 999999999, time.UTC)
+
+	s.mockAct.EXPECT().
+		FindByUserID(uint(1), &from, &to, 20, 0).
+		Return([]model.Activity{
+			{ID: 5, UserID: 1, Type: model.ActivityCycle, Source: "health_connect"},
+		}, nil)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/v1/activities?from=2026-07-10&to=2026-07-15", nil)
+	req.Header.Set("Authorization", authHeader(t, s.jwtManager, 1))
+	s.r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	var resp []interface{}
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.Len(t, resp, 1)
+}
+
 // ───────────────────── NUTRITION ─────────────────────
 
 func TestGetNutrition_FullDay(t *testing.T) {
