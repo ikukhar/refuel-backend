@@ -22,6 +22,7 @@ func Setup(
 	activityHandler *handler.ActivityHandler,
 	nutritionHandler *handler.NutritionHandler,
 	mealPeriodHandler *handler.MealPeriodHandler,
+	recipeHandler *handler.RecipeHandler,
 	recipeAdminHandler *adminHandler.RecipeAdminHandler,
 	userMealPeriodsAdminHandler *adminHandler.MealPeriodAdminHandler,
 ) *gin.Engine {
@@ -51,6 +52,8 @@ func Setup(
 			protected.GET("/activities", activityHandler.List)
 			protected.POST("/activities", activityHandler.Create)
 			protected.DELETE("/activities/:id", activityHandler.Delete)
+
+			protected.GET("/recipes", recipeHandler.ListByIDs)
 
 			protected.GET("/nutrition/today", nutritionHandler.GetToday)
 

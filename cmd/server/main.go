@@ -76,10 +76,11 @@ func main() {
 	activityHandler := handler.NewActivityHandler(activityService)
 	nutritionHandler := handler.NewNutritionHandler(nutritionService)
 	mealPeriodHandler := handler.NewMealPeriodHandler(mealPeriodService)
+	recipeHandler := handler.NewRecipeHandler(recipeRepo)
 	recipeAdminHandler := adminHandler.NewRecipeAdminHandler(recipeRepo)
 	userMealPeriodsAdminHandler := adminHandler.NewMealPeriodAdminHandler(userMealPeriodsRepo)
 
-	r := router.Setup(cfg, logger, jwtManager, authHandler, userHandler, activityHandler, nutritionHandler, mealPeriodHandler, recipeAdminHandler, userMealPeriodsAdminHandler)
+	r := router.Setup(cfg, logger, jwtManager, authHandler, userHandler, activityHandler, nutritionHandler, mealPeriodHandler, recipeHandler, recipeAdminHandler, userMealPeriodsAdminHandler)
 
 	addr := fmt.Sprintf(":%d", cfg.AppPort)
 	srv := &http.Server{

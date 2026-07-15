@@ -69,12 +69,13 @@ func setupAPI(t *testing.T) *apiSuite {
 	activityH := handler.NewActivityHandler(activitySvc)
 	nutritionH := handler.NewNutritionHandler(nutritionSvc)
 	mealPeriodH := handler.NewMealPeriodHandler(mealPeriodSvc)
+	recipeH := handler.NewRecipeHandler(mockRecipe)
 	recipeAdminH := adminHandler.NewRecipeAdminHandler(nil)
 	userMealPeriodsAdminH := adminHandler.NewMealPeriodAdminHandler(nil)
 
 	cfg := &config.Config{AdminUser: "admin", AdminPass: "admin"}
 
-	r := router.Setup(cfg, logger, jwtManager, authH, userH, activityH, nutritionH, mealPeriodH, recipeAdminH, userMealPeriodsAdminH)
+	r := router.Setup(cfg, logger, jwtManager, authH, userH, activityH, nutritionH, mealPeriodH, recipeH, recipeAdminH, userMealPeriodsAdminH)
 
 	return &apiSuite{
 		r:          r,
@@ -682,6 +683,75 @@ func TestGetNutrition_InvalidMeal(t *testing.T) {
 	require.Equal(t, http.StatusBadRequest, w.Code)
 }
 
+// ───────────────────── RECIPES ─────────────────────
+
+func TestListRecipesByIDs_Success(t *testing.T) {
+	s := setupAPI(t)
+	defer s.ctrl.Finish()
+
+	s.mockRecipe.EXPECT().
+		FindByIDs([]uint{1, 2}).
+		Return([]model.Recipe{
+			{ID: 1, Title: "Oatmeal", MealType: model.MealBreakfast, Calories: 320, ProteinG: 12, FatG: 8, CarbsG: 52},
+			{ID: 2, Title: "Pasta", MealType: model.MealLunch, Calories: 520, ProteinG: 28, FatG: 22, CarbsG: 52},
+		}, nil)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/v1/recipes?ids=1,2", nil)
+	req.Header.Set("Authorization", authHeader(t, s.jwtManager, 1))
+	s.r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	var resp []map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	require.Len(t, resp, 2)
+	assert.Equal(t, "Oatmeal", resp[0]["title"])
+	assert.Equal(t, "Pasta", resp[1]["title"])
+}
+
+func TestListRecipesByIDs_MissingIDs(t *testing.T) {
+	s := setupAPI(t)
+	defer s.ctrl.Finish()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/v1/recipes", nil)
+	req.Header.Set("Authorization", authHeader(t, s.jwtManager, 1))
+	s.r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestListRecipesByIDs_InvalidID(t *testing.T) {
+	s := setupAPI(t)
+	defer s.ctrl.Finish()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/v1/recipes?ids=abc", nil)
+	req.Header.Set("Authorization", authHeader(t, s.jwtManager, 1))
+	s.r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestListRecipesByIDs_EmptyResult(t *testing.T) {
+	s := setupAPI(t)
+	defer s.ctrl.Finish()
+
+	s.mockRecipe.EXPECT().
+		FindByIDs([]uint{999}).
+		Return(nil, nil)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/v1/recipes?ids=999", nil)
+	req.Header.Set("Authorization", authHeader(t, s.jwtManager, 1))
+	s.r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	var resp []interface{}
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.Len(t, resp, 0)
+}
+
 // ───────────────────── PROTECTED ENDPOINTS ─────────────────────
 
 func TestProtectedEndpoints_RejectWithoutAuth(t *testing.T) {
@@ -699,6 +769,7 @@ func TestProtectedEndpoints_RejectWithoutAuth(t *testing.T) {
 		{"POST", "/api/v1/activities", `{"type":"run"}`},
 		{"DELETE", "/api/v1/activities/1", ""},
 		{"GET", "/api/v1/nutrition/today", ""},
+		{"GET", "/api/v1/recipes?ids=1,2", ""},
 	}
 
 	for _, ep := range endpoints {
