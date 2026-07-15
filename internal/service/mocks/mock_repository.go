@@ -362,6 +362,21 @@ func (mr *MockRecipeRepositoryMockRecorder) FindByMealTypeExcludeIDs(mealType, e
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByMealTypeExcludeIDs", reflect.TypeOf((*MockRecipeRepository)(nil).FindByMealTypeExcludeIDs), mealType, excludeIDs)
 }
 
+// FindByIDs mocks base method.
+func (m *MockRecipeRepository) FindByIDs(ids []uint) ([]model.Recipe, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindByIDs", ids)
+	ret0, _ := ret[0].([]model.Recipe)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindByIDs indicates an expected call of FindByIDs.
+func (mr *MockRecipeRepositoryMockRecorder) FindByIDs(ids any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByIDs", reflect.TypeOf((*MockRecipeRepository)(nil).FindByIDs), ids)
+}
+
 // Update mocks base method.
 func (m *MockRecipeRepository) Update(recipe *model.Recipe) error {
 	m.ctrl.T.Helper()

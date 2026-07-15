@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/ikukhar/refuel-backend/internal/model"
@@ -190,4 +191,130 @@ func TestNutritionHandler_GetToday_FullResponse(t *testing.T) {
 	assert.Equal(t, "baseline", resp["status"])
 	assert.InDelta(t, 1809.3, resp["calories_target"].(float64), 1)
 	assert.NotEmpty(t, resp["meals"])
+}
+
+func TestNutritionHandler_GetToday_RefreshFull(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockN := mocks.NewMockDailyNutritionRepository(ctrl)
+	mockA := mocks.NewMockActivityRepository(ctrl)
+	mockU := mocks.NewMockUserRepository(ctrl)
+	mockR := mocks.NewMockRecipeRepository(ctrl)
+	mockM := mocks.NewMockMealPeriodRepository(ctrl)
+
+	svc := service.NewNutritionService(mockN, mockA, mockU, mockR, mockM)
+	h := NewNutritionHandler(svc)
+
+	mockU.EXPECT().
+		FindByID(uint(1)).
+		Return(&model.User{ID: 1, Name: "Test", Weight: 80, Height: 180, Age: 30, Gender: "male"}, nil)
+
+	mockA.EXPECT().
+		FindByUserID(uint(1), gomock.Any(), nil, 200, 0).
+		Return([]model.Activity{}, nil)
+
+	mockM.EXPECT().
+		FindByUserID(uint(1)).
+		Return([]model.MealPeriod{
+			{MealType: model.MealBreakfast, Name: "Завтрак", StartHour: 7, StartMinute: 0, CaloriesPercent: 25},
+			{MealType: model.MealLunch, Name: "Обед", StartHour: 12, StartMinute: 0, CaloriesPercent: 35},
+		}, nil)
+
+	mockN.EXPECT().
+		Upsert(gomock.Any(), gomock.Any()).
+		Return(nil)
+
+	mockR.EXPECT().
+		FindByMealTypeExcludeIDs(gomock.Any(), gomock.Any()).
+		Return(nil, nil).AnyTimes()
+
+	mockR.EXPECT().
+		FindByMealType(gomock.Any()).
+		Return([]model.Recipe{
+			{Title: "R1", MealType: model.MealBreakfast, Calories: 300, ProteinG: 10, FatG: 5, CarbsG: 30},
+			{Title: "R2", MealType: model.MealLunch, Calories: 500, ProteinG: 10, FatG: 5, CarbsG: 30},
+		}, nil).AnyTimes()
+
+	r := gin.New()
+	r.GET("/api/v1/nutrition/today", func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		h.GetToday(c)
+	})
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/v1/nutrition/today?refresh=true", nil)
+	r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	var resp map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.Equal(t, "baseline", resp["status"])
+}
+
+func TestNutritionHandler_GetToday_RefreshMeal(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockN := mocks.NewMockDailyNutritionRepository(ctrl)
+	mockA := mocks.NewMockActivityRepository(ctrl)
+	mockU := mocks.NewMockUserRepository(ctrl)
+	mockR := mocks.NewMockRecipeRepository(ctrl)
+	mockM := mocks.NewMockMealPeriodRepository(ctrl)
+
+	svc := service.NewNutritionService(mockN, mockA, mockU, mockR, mockM)
+	h := NewNutritionHandler(svc)
+
+	now := time.Now().Truncate(24 * time.Hour)
+
+	mockN.EXPECT().
+		FindByUserAndDate(gomock.Any(), uint(1), now).
+		Return(&model.DailyNutrition{
+			UserID:         1,
+			Date:           now,
+			CaloriesTarget: 2000,
+			Status:         "baseline",
+			RecipeIDs:      `{"breakfast":[1],"lunch":[2]}`,
+		}, nil)
+
+	mockM.EXPECT().
+		FindByUserID(uint(1)).
+		Return([]model.MealPeriod{
+			{MealType: model.MealBreakfast, Name: "Завтрак", StartHour: 7, StartMinute: 0, CaloriesPercent: 25},
+			{MealType: model.MealLunch, Name: "Обед", StartHour: 12, StartMinute: 0, CaloriesPercent: 35},
+		}, nil)
+
+	mockR.EXPECT().
+		FindByMealTypeExcludeIDs("breakfast", []uint{2}).
+		Return([]model.Recipe{
+			{ID: 3, Title: "New Breakfast", MealType: model.MealBreakfast, Calories: 200, ProteinG: 10, FatG: 5, CarbsG: 30},
+		}, nil)
+
+	mockR.EXPECT().
+		FindByIDs(gomock.Any()).
+		Return([]model.Recipe{
+			{ID: 3, Title: "New Breakfast", MealType: model.MealBreakfast, Calories: 200, ProteinG: 10, FatG: 5, CarbsG: 30},
+			{ID: 2, Title: "Lunch", MealType: model.MealLunch, Calories: 500, ProteinG: 10, FatG: 5, CarbsG: 30},
+		}, nil)
+
+	mockN.EXPECT().
+		Upsert(gomock.Any(), gomock.Any()).
+		Return(nil)
+
+	r := gin.New()
+	r.GET("/api/v1/nutrition/today", func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		h.GetToday(c)
+	})
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/v1/nutrition/today?refresh=true&meal=breakfast", nil)
+	r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	var resp map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.Equal(t, 2000.0, resp["calories_target"].(float64))
 }

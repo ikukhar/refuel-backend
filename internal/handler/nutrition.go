@@ -22,7 +22,30 @@ func (h *NutritionHandler) GetToday(c *gin.Context) {
 		return
 	}
 
-	if meal := c.Query("meal"); meal != "" {
+	refresh := c.Query("refresh") == "true"
+	meal := c.Query("meal")
+
+	if refresh && meal != "" {
+		nutrition, err := h.nutritionService.RefreshMeal(c.Request.Context(), userID, meal)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, nutrition)
+		return
+	}
+
+	if refresh {
+		nutrition, err := h.nutritionService.RefreshToday(c.Request.Context(), userID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, nutrition)
+		return
+	}
+
+	if meal != "" {
 		mealResp, err := h.nutritionService.GetMeal(c.Request.Context(), userID, meal)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

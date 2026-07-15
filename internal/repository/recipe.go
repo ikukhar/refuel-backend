@@ -38,6 +38,15 @@ func (r *RecipeRepository) FindByMealType(mealType string) ([]model.Recipe, erro
 	return recipes, err
 }
 
+func (r *RecipeRepository) FindByIDs(ids []uint) ([]model.Recipe, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	var recipes []model.Recipe
+	err := r.db.Where("id IN ?", ids).Find(&recipes).Error
+	return recipes, err
+}
+
 func (r *RecipeRepository) FindByMealTypeExcludeIDs(mealType string, excludeIDs []uint) ([]model.Recipe, error) {
 	var recipes []model.Recipe
 	query := r.db.Where("meal_type = ?", mealType)
