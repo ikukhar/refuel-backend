@@ -18,6 +18,8 @@ type ActivityRepository interface {
 	Create(activity *model.Activity) error
 	FindByUserID(userID uint, from, to *time.Time, limit, offset int) ([]model.Activity, error)
 	FindBySourceID(sourceID string) (*model.Activity, error)
+	FindByID(id uint) (*model.Activity, error)
+	Delete(id uint) error
 }
 
 type DailyNutritionRepository interface {

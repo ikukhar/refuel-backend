@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/ikukhar/refuel-backend/internal/model"
@@ -98,6 +99,17 @@ func (s *ActivityService) List(ctx context.Context, userID uint, from, to *time.
 		resp[i] = *toActivityResponse(&a)
 	}
 	return resp, nil
+}
+
+func (s *ActivityService) DeleteByID(ctx context.Context, userID, activityID uint) error {
+	activity, err := s.repo.FindByID(activityID)
+	if err != nil {
+		return fmt.Errorf("activity not found: %w", err)
+	}
+	if activity.UserID != userID {
+		return errors.New("activity does not belong to user")
+	}
+	return s.repo.Delete(activityID)
 }
 
 func toActivityResponse(a *model.Activity) *ActivityResponse {

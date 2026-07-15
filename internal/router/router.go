@@ -50,6 +50,7 @@ func Setup(
 		{
 			protected.GET("/activities", activityHandler.List)
 			protected.POST("/activities", activityHandler.Create)
+			protected.DELETE("/activities/:id", activityHandler.Delete)
 
 			protected.GET("/nutrition/today", nutritionHandler.GetToday)
 

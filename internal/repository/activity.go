@@ -54,3 +54,7 @@ func (r *ActivityRepository) FindByID(id uint) (*model.Activity, error) {
 	}
 	return &activity, nil
 }
+
+func (r *ActivityRepository) Delete(id uint) error {
+	return r.db.Delete(&model.Activity{}, id).Error
+}

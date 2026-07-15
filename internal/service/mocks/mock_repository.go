@@ -168,6 +168,35 @@ func (mr *MockActivityRepositoryMockRecorder) FindByUserID(userID, from, to, lim
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByUserID", reflect.TypeOf((*MockActivityRepository)(nil).FindByUserID), userID, from, to, limit, offset)
 }
 
+// FindByID mocks base method.
+func (m *MockActivityRepository) FindByID(id uint) (*model.Activity, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindByID", id)
+	ret0, _ := ret[0].(*model.Activity)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindByID indicates an expected call of FindByID.
+func (mr *MockActivityRepositoryMockRecorder) FindByID(id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByID", reflect.TypeOf((*MockActivityRepository)(nil).FindByID), id)
+}
+
+// Delete mocks base method.
+func (m *MockActivityRepository) Delete(id uint) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockActivityRepositoryMockRecorder) Delete(id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockActivityRepository)(nil).Delete), id)
+}
+
 // MockDailyNutritionRepository is a mock of DailyNutritionRepository interface.
 type MockDailyNutritionRepository struct {
 	ctrl     *gomock.Controller

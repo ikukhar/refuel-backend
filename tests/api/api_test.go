@@ -516,6 +516,73 @@ func TestListActivities_FilterByFromAndTo(t *testing.T) {
 	assert.Len(t, resp, 1)
 }
 
+func TestDeleteActivity_Success(t *testing.T) {
+	s := setupAPI(t)
+	defer s.ctrl.Finish()
+
+	s.mockAct.EXPECT().
+		FindByID(uint(42)).
+		Return(&model.Activity{ID: 42, UserID: 1, Type: model.ActivityRun, Source: "manual"}, nil)
+
+	s.mockAct.EXPECT().
+		Delete(uint(42)).
+		Return(nil)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("DELETE", "/api/v1/activities/42", nil)
+	req.Header.Set("Authorization", authHeader(t, s.jwtManager, 1))
+	s.r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	var resp map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.Equal(t, "activity deleted", resp["message"])
+}
+
+func TestDeleteActivity_NotFound(t *testing.T) {
+	s := setupAPI(t)
+	defer s.ctrl.Finish()
+
+	s.mockAct.EXPECT().
+		FindByID(uint(999)).
+		Return(nil, gorm.ErrRecordNotFound)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("DELETE", "/api/v1/activities/999", nil)
+	req.Header.Set("Authorization", authHeader(t, s.jwtManager, 1))
+	s.r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusNotFound, w.Code)
+}
+
+func TestDeleteActivity_WrongOwner(t *testing.T) {
+	s := setupAPI(t)
+	defer s.ctrl.Finish()
+
+	s.mockAct.EXPECT().
+		FindByID(uint(42)).
+		Return(&model.Activity{ID: 42, UserID: 99, Type: model.ActivityRun, Source: "manual"}, nil)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("DELETE", "/api/v1/activities/42", nil)
+	req.Header.Set("Authorization", authHeader(t, s.jwtManager, 1))
+	s.r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusNotFound, w.Code)
+}
+
+func TestDeleteActivity_InvalidID(t *testing.T) {
+	s := setupAPI(t)
+	defer s.ctrl.Finish()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("DELETE", "/api/v1/activities/abc", nil)
+	req.Header.Set("Authorization", authHeader(t, s.jwtManager, 1))
+	s.r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+}
+
 // ───────────────────── NUTRITION ─────────────────────
 
 func TestGetNutrition_FullDay(t *testing.T) {
@@ -630,6 +697,7 @@ func TestProtectedEndpoints_RejectWithoutAuth(t *testing.T) {
 		{"PUT", "/api/v1/user/profile", `{"name":"Test"}`},
 		{"GET", "/api/v1/activities", ""},
 		{"POST", "/api/v1/activities", `{"type":"run"}`},
+		{"DELETE", "/api/v1/activities/1", ""},
 		{"GET", "/api/v1/nutrition/today", ""},
 	}
 

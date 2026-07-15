@@ -85,6 +85,28 @@ func (h *ActivityHandler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, activities)
 }
 
+func (h *ActivityHandler) Delete(c *gin.Context) {
+	userID, ok := userIDFromContext(c)
+	if !ok {
+		abortUnauthorized(c)
+		return
+	}
+
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	if err := h.activityService.DeleteByID(c.Request.Context(), userID, uint(id)); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "activity deleted"})
+}
+
 func parseDateRange(c *gin.Context) (*time.Time, *time.Time) {
 	var from, to *time.Time
 	if fromStr := c.Query("from"); fromStr != "" {
