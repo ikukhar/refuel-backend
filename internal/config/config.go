@@ -9,7 +9,7 @@ import (
 )
 
 type Config struct {
-	AppEnv string
+	AppEnv  string
 	AppPort int
 
 	DBHost     string
@@ -23,9 +23,9 @@ type Config struct {
 	JWTAccessTTL  time.Duration
 	JWTRefreshTTL time.Duration
 
-	LogLevel     string
-	AdminUser    string
-	AdminPass    string
+	LogLevel  string
+	AdminUser string
+	AdminPass string
 }
 
 func Load(path string) (*Config, error) {

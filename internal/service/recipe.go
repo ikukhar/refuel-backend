@@ -17,43 +17,43 @@ func NewRecipeService(repo RecipeRepository) *RecipeService {
 }
 
 type CreateRecipeInput struct {
-	Title       string        `json:"title"`
-	Description string        `json:"description"`
-	Calories    int           `json:"calories"`
-	ProteinG    float64       `json:"protein_g"`
-	FatG        float64       `json:"fat_g"`
-	CarbsG      float64       `json:"carbs_g"`
-	ImageURL    *string       `json:"image_url"`
+	Title       string         `json:"title"`
+	Description string         `json:"description"`
+	Calories    int            `json:"calories"`
+	ProteinG    float64        `json:"protein_g"`
+	FatG        float64        `json:"fat_g"`
+	CarbsG      float64        `json:"carbs_g"`
+	ImageURL    *string        `json:"image_url"`
 	MealType    model.MealType `json:"meal_type"`
-	Steps       []string      `json:"steps"`
-	Ingredients []string      `json:"ingredients"`
+	Steps       []string       `json:"steps"`
+	Ingredients []string       `json:"ingredients"`
 }
 
 type UpdateRecipeInput struct {
-	Title       *string        `json:"title"`
-	Description *string        `json:"description"`
-	Calories    *int           `json:"calories"`
-	ProteinG    *float64       `json:"protein_g"`
-	FatG        *float64       `json:"fat_g"`
-	CarbsG      *float64       `json:"carbs_g"`
-	ImageURL    **string       `json:"image_url"`
+	Title       *string         `json:"title"`
+	Description *string         `json:"description"`
+	Calories    *int            `json:"calories"`
+	ProteinG    *float64        `json:"protein_g"`
+	FatG        *float64        `json:"fat_g"`
+	CarbsG      *float64        `json:"carbs_g"`
+	ImageURL    **string        `json:"image_url"`
 	MealType    *model.MealType `json:"meal_type"`
-	Steps       *[]string      `json:"steps"`
-	Ingredients *[]string      `json:"ingredients"`
+	Steps       *[]string       `json:"steps"`
+	Ingredients *[]string       `json:"ingredients"`
 }
 
 type RecipeResponse struct {
-	ID          uint          `json:"id"`
-	Title       string        `json:"title"`
-	Description string        `json:"description"`
-	Calories    int           `json:"calories"`
-	ProteinG    float64       `json:"protein_g"`
-	FatG        float64       `json:"fat_g"`
-	CarbsG      float64       `json:"carbs_g"`
-	ImageURL    *string       `json:"image_url"`
+	ID          uint           `json:"id"`
+	Title       string         `json:"title"`
+	Description string         `json:"description"`
+	Calories    int            `json:"calories"`
+	ProteinG    float64        `json:"protein_g"`
+	FatG        float64        `json:"fat_g"`
+	CarbsG      float64        `json:"carbs_g"`
+	ImageURL    *string        `json:"image_url"`
 	MealType    model.MealType `json:"meal_type"`
-	Steps       []string      `json:"steps"`
-	Ingredients []string      `json:"ingredients"`
+	Steps       []string       `json:"steps"`
+	Ingredients []string       `json:"ingredients"`
 }
 
 func (s *RecipeService) Create(ctx context.Context, input CreateRecipeInput) (*model.Recipe, error) {
@@ -149,13 +149,4 @@ func marshalSlice(s []string) string {
 		return "[]"
 	}
 	return string(b)
-}
-
-func unmarshalSlice(s string) []string {
-	if s == "" || s == "[]" {
-		return nil
-	}
-	var result []string
-	json.Unmarshal([]byte(s), &result)
-	return result
 }

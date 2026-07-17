@@ -249,7 +249,7 @@ func TestNutritionHandler_GetToday_RefreshFull(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, w.Code)
 	var resp map[string]interface{}
-	json.Unmarshal(w.Body.Bytes(), &resp)
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Equal(t, "baseline", resp["status"])
 }
 
@@ -315,6 +315,6 @@ func TestNutritionHandler_GetToday_RefreshMeal(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, w.Code)
 	var resp map[string]interface{}
-	json.Unmarshal(w.Body.Bytes(), &resp)
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Equal(t, 2000.0, resp["calories_target"].(float64))
 }

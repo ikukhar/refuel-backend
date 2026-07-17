@@ -8,14 +8,14 @@ import (
 type ActivityType string
 
 const (
-	ActivityRun       ActivityType = "run"
-	ActivityWalk      ActivityType = "walk"
-	ActivityCycle     ActivityType = "cycle"
-	ActivitySwim      ActivityType = "swim"
-	ActivityHike      ActivityType = "hike"
-	ActivityWorkout   ActivityType = "workout"
-	ActivityYoga      ActivityType = "yoga"
-	ActivityOther     ActivityType = "other"
+	ActivityRun     ActivityType = "run"
+	ActivityWalk    ActivityType = "walk"
+	ActivityCycle   ActivityType = "cycle"
+	ActivitySwim    ActivityType = "swim"
+	ActivityHike    ActivityType = "hike"
+	ActivityWorkout ActivityType = "workout"
+	ActivityYoga    ActivityType = "yoga"
+	ActivityOther   ActivityType = "other"
 )
 
 var validActivityTypes = map[ActivityType]struct{}{

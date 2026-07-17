@@ -8,8 +8,8 @@ import (
 )
 
 type UserService struct {
-	userRepo         UserRepository
-	mealPeriodRepo   MealPeriodRepository
+	userRepo       UserRepository
+	mealPeriodRepo MealPeriodRepository
 }
 
 func NewUserService(userRepo UserRepository, mealPeriodRepo MealPeriodRepository) *UserService {
