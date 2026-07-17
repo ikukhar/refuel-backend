@@ -191,10 +191,10 @@ func TestNutritionService_BuildFromPeriods_DistributesCalories(t *testing.T) {
 	resp := svc.buildFromPeriods(nutrition, periods)
 
 	require.Len(t, resp.Meals, 4)
-	assert.Equal(t, 500.0, resp.Meals[0].CaloriesTarget)    // 2000 * 25% = 500
-	assert.Equal(t, 700.0, resp.Meals[1].CaloriesTarget)    // 2000 * 35% = 700
-	assert.Equal(t, 500.0, resp.Meals[2].CaloriesTarget)    // 2000 * 25% = 500
-	assert.Equal(t, 300.0, resp.Meals[3].CaloriesTarget)    // 2000 * 15% = 300
+	assert.Equal(t, 500.0, resp.Meals[0].CaloriesTarget) // 2000 * 25% = 500
+	assert.Equal(t, 700.0, resp.Meals[1].CaloriesTarget) // 2000 * 35% = 700
+	assert.Equal(t, 500.0, resp.Meals[2].CaloriesTarget) // 2000 * 25% = 500
+	assert.Equal(t, 300.0, resp.Meals[3].CaloriesTarget) // 2000 * 15% = 300
 }
 
 func TestNutritionService_BuildFromStored_UsesRecipeIDsMap(t *testing.T) {

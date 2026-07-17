@@ -45,18 +45,18 @@ func TestActivityRepository_FindByUserID_WithDateFilter(t *testing.T) {
 	oldDate := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
 	newDate := time.Now()
 
-	repo.Create(&model.Activity{
+	require.NoError(t, repo.Create(&model.Activity{
 		UserID:    user.ID,
 		Type:      "walk",
 		StartedAt: oldDate,
 		SourceID:  "filter-old-" + time.Now().Format("150405.00001"),
-	})
-	repo.Create(&model.Activity{
+	}))
+	require.NoError(t, repo.Create(&model.Activity{
 		UserID:    user.ID,
 		Type:      "cycle",
 		StartedAt: newDate,
 		SourceID:  "filter-new-" + time.Now().Format("150405.00002"),
-	})
+	}))
 
 	filterDate := time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC)
 	activities, err := repo.FindByUserID(user.ID, &filterDate, nil, 10, 0)
@@ -79,7 +79,7 @@ func TestActivityRepository_FindBySourceID(t *testing.T) {
 		Source:    "health_connect",
 		SourceID:  sourceID,
 	}
-	repo.Create(activity)
+	require.NoError(t, repo.Create(activity))
 
 	found, err := repo.FindBySourceID(sourceID)
 	require.NoError(t, err)

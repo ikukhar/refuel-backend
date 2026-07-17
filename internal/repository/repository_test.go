@@ -22,7 +22,7 @@ var testDB *gorm.DB
 func TestMain(m *testing.M) {
 	ctx := context.Background()
 
-	pg, err := tcpostgres.RunContainer(ctx,
+	pg, err := tcpostgres.Run(ctx, "postgres:16-alpine",
 		tcpostgres.WithDatabase("refuel_test"),
 		tcpostgres.WithUsername("test"),
 		tcpostgres.WithPassword("test"),

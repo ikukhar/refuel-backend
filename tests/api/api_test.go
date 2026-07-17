@@ -29,13 +29,13 @@ import (
 )
 
 type apiSuite struct {
-	r           *gin.Engine
-	jwtManager  *jwt.Manager
-	ctrl        *gomock.Controller
-	mockUser    *mockrepo.MockUserRepository
-	mockAct     *mockrepo.MockActivityRepository
-	mockNutr    *mockrepo.MockDailyNutritionRepository
-	mockRecipe  *mockrepo.MockRecipeRepository
+	r              *gin.Engine
+	jwtManager     *jwt.Manager
+	ctrl           *gomock.Controller
+	mockUser       *mockrepo.MockUserRepository
+	mockAct        *mockrepo.MockActivityRepository
+	mockNutr       *mockrepo.MockDailyNutritionRepository
+	mockRecipe     *mockrepo.MockRecipeRepository
 	mockMealPeriod *mockrepo.MockMealPeriodRepository
 }
 
@@ -44,8 +44,8 @@ func setupAPI(t *testing.T) *apiSuite {
 	gin.SetMode(gin.TestMode)
 
 	wd, _ := os.Getwd()
-	os.Chdir("../..")
-	t.Cleanup(func() { os.Chdir(wd) })
+	require.NoError(t, os.Chdir("../.."))
+	t.Cleanup(func() { require.NoError(t, os.Chdir(wd)) })
 
 	ctrl := gomock.NewController(t)
 	logger := zerolog.Nop()
@@ -78,13 +78,13 @@ func setupAPI(t *testing.T) *apiSuite {
 	r := router.Setup(cfg, logger, jwtManager, authH, userH, activityH, nutritionH, mealPeriodH, recipeH, recipeAdminH, userMealPeriodsAdminH)
 
 	return &apiSuite{
-		r:          r,
-		jwtManager: jwtManager,
-		ctrl:       ctrl,
-		mockUser:   mockUser,
-		mockAct:    mockAct,
-		mockNutr:   mockNutr,
-		mockRecipe: mockRecipe,
+		r:              r,
+		jwtManager:     jwtManager,
+		ctrl:           ctrl,
+		mockUser:       mockUser,
+		mockAct:        mockAct,
+		mockNutr:       mockNutr,
+		mockRecipe:     mockRecipe,
 		mockMealPeriod: mockMealPeriod,
 	}
 }
@@ -109,7 +109,7 @@ func TestHealthEndpoint(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, w.Code)
 	var resp map[string]string
-	json.Unmarshal(w.Body.Bytes(), &resp)
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Equal(t, "ok", resp["status"])
 }
 
@@ -140,7 +140,7 @@ func TestRegister_Success(t *testing.T) {
 
 	require.Equal(t, http.StatusCreated, w.Code)
 	var resp map[string]interface{}
-	json.Unmarshal(w.Body.Bytes(), &resp)
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Equal(t, "new@test.com", resp["user"].(map[string]interface{})["email"])
 	assert.NotEmpty(t, resp["access_token"])
 	assert.NotEmpty(t, resp["refresh_token"])
@@ -195,7 +195,7 @@ func TestLogin_Success(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, w.Code)
 	var resp map[string]interface{}
-	json.Unmarshal(w.Body.Bytes(), &resp)
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Equal(t, "a@b.com", resp["user"].(map[string]interface{})["email"])
 	assert.NotEmpty(t, resp["access_token"])
 	assert.NotEmpty(t, resp["refresh_token"])
@@ -260,7 +260,7 @@ func TestRefresh_Success(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, w.Code)
 	var resp map[string]interface{}
-	json.Unmarshal(w.Body.Bytes(), &resp)
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.NotEmpty(t, resp["access_token"])
 	assert.NotEmpty(t, resp["refresh_token"])
 }
@@ -299,7 +299,7 @@ func TestGetProfile_Success(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, w.Code)
 	var resp map[string]interface{}
-	json.Unmarshal(w.Body.Bytes(), &resp)
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Equal(t, "test@test.com", resp["email"])
 	assert.Equal(t, "Test User", resp["name"])
 }
@@ -339,7 +339,7 @@ func TestUpdateProfile_Success(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, w.Code)
 	var resp map[string]interface{}
-	json.Unmarshal(w.Body.Bytes(), &resp)
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Equal(t, "profile updated", resp["message"])
 }
 
@@ -372,7 +372,7 @@ func TestCreateActivity_Success(t *testing.T) {
 
 	require.Equal(t, http.StatusCreated, w.Code)
 	var resp map[string]interface{}
-	json.Unmarshal(w.Body.Bytes(), &resp)
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Equal(t, float64(100), resp["id"])
 }
 
@@ -393,7 +393,7 @@ func TestCreateActivity_Idempotent(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, w.Code)
 	var resp map[string]interface{}
-	json.Unmarshal(w.Body.Bytes(), &resp)
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Equal(t, float64(42), resp["id"])
 }
 
@@ -443,7 +443,7 @@ func TestListActivities_Success(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, w.Code)
 	var resp []interface{}
-	json.Unmarshal(w.Body.Bytes(), &resp)
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Len(t, resp, 2)
 }
 
@@ -466,7 +466,7 @@ func TestListActivities_FilterByFrom(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, w.Code)
 	var resp []interface{}
-	json.Unmarshal(w.Body.Bytes(), &resp)
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Len(t, resp, 1)
 }
 
@@ -489,7 +489,7 @@ func TestListActivities_FilterByTo(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, w.Code)
 	var resp []interface{}
-	json.Unmarshal(w.Body.Bytes(), &resp)
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Len(t, resp, 1)
 }
 
@@ -513,7 +513,7 @@ func TestListActivities_FilterByFromAndTo(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, w.Code)
 	var resp []interface{}
-	json.Unmarshal(w.Body.Bytes(), &resp)
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Len(t, resp, 1)
 }
 
@@ -536,7 +536,7 @@ func TestDeleteActivity_Success(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, w.Code)
 	var resp map[string]interface{}
-	json.Unmarshal(w.Body.Bytes(), &resp)
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Equal(t, "activity deleted", resp["message"])
 }
 
@@ -633,7 +633,7 @@ func TestGetNutrition_FullDay(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, w.Code)
 	var resp map[string]interface{}
-	json.Unmarshal(w.Body.Bytes(), &resp)
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Equal(t, "final", resp["status"])
 	// BMR for 70kg/175cm/25y/female = 1507.75, TDEE = 1809.3, + 300 from effectiveLoad (today, weight 1.0) = 2109.3
 	assert.InDelta(t, 2109.3, resp["calories_target"].(float64), 1)
@@ -663,7 +663,7 @@ func TestGetNutrition_WithMeal(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, w.Code)
 	var resp map[string]interface{}
-	json.Unmarshal(w.Body.Bytes(), &resp)
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	lunch := resp["lunch"].(map[string]interface{})
 	dishes := lunch["dishes"].([]interface{})
 	require.Len(t, dishes, 1)
@@ -703,7 +703,7 @@ func TestListRecipesByIDs_Success(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, w.Code)
 	var resp []map[string]interface{}
-	json.Unmarshal(w.Body.Bytes(), &resp)
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	require.Len(t, resp, 2)
 	assert.Equal(t, "Oatmeal", resp[0]["title"])
 	assert.Equal(t, "Pasta", resp[1]["title"])
@@ -748,7 +748,7 @@ func TestListRecipesByIDs_EmptyResult(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, w.Code)
 	var resp []interface{}
-	json.Unmarshal(w.Body.Bytes(), &resp)
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Len(t, resp, 0)
 }
 
