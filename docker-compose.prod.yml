@@ -1,0 +1,203 @@
+version: "3.9"
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-service-defaults: &service-defaults
+  restart: unless-stopped
+  logging: *default-logging
+  networks:
+    - refuel
+
+services:
+  # ──────────────────────────────────────────
+  # Database
+  # ──────────────────────────────────────────
+  postgres:
+    <<: *service-defaults
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: refuel
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: refuel_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U refuel -d refuel_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+        reservations:
+          memory: 256M
+
+  # ──────────────────────────────────────────
+  # DB migrations (one-off job, not a long-running service)
+  # ──────────────────────────────────────────
+  migrate:
+    image: migrate/migrate:v4.17.1
+    networks:
+      - refuel
+    volumes:
+      - ./migrations:/migrations:ro
+    entrypoint:
+      - migrate
+      - -path
+      - /migrations
+      - -database
+      - postgres://refuel:${DB_PASSWORD}@postgres:5432/refuel_db?sslmode=disable
+    command: ["up"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ──────────────────────────────────────────
+  # Application services (Go)
+  # ──────────────────────────────────────────
+  gateway:
+    <<: *service-defaults
+    image: ghcr.io/OWNER/refuel-gateway:${IMAGE_TAG}
+    env_file: .env
+    ports:
+      - "80:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+        reservations:
+          memory: 128M
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  auth:
+    <<: *service-defaults
+    image: ghcr.io/OWNER/refuel-auth:${IMAGE_TAG}
+    env_file: .env
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+        reservations:
+          memory: 128M
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  training:
+    <<: *service-defaults
+    image: ghcr.io/OWNER/refuel-training:${IMAGE_TAG}
+    env_file: .env
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+        reservations:
+          memory: 128M
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  nutrition:
+    <<: *service-defaults
+    image: ghcr.io/OWNER/refuel-nutrition:${IMAGE_TAG}
+    env_file: .env
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+        reservations:
+          memory: 128M
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  recipes:
+    <<: *service-defaults
+    image: ghcr.io/OWNER/refuel-recipes:${IMAGE_TAG}
+    env_file: .env
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+        reservations:
+          memory: 128M
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  subscription:
+    <<: *service-defaults
+    image: ghcr.io/OWNER/refuel-subscription:${IMAGE_TAG}
+    env_file: .env
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+        reservations:
+          memory: 128M
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+networks:
+  refuel:
+    driver: bridge
+
+volumes:
+  postgres_data:
