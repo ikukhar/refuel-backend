@@ -1,19 +1,25 @@
+version: "2"
 run:
   timeout: 5m
 
 linters:
+  default: none
   enable:
     - govet
     - errcheck
     - staticcheck
     - unused
-    - gosimple
     - ineffassign
-    - gofmt
-    - goimports
     - bodyclose
     - sqlclosecheck
+  exclusions:
+    paths:
+      - migrations
 
-issues:
-  exclude-dirs:
-    - migrations
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    paths:
+      - migrations
