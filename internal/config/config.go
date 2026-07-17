@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"time"
 
 	"github.com/spf13/viper"
@@ -45,7 +46,7 @@ func Load(path string) (*Config, error) {
 	viper.SetDefault("ADMIN_PASS", "admin")
 
 	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+		if !os.IsNotExist(err) {
 			return nil, fmt.Errorf("failed to read config file: %w", err)
 		}
 	}
