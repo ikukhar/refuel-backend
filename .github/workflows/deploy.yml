@@ -66,6 +66,16 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Copy docker-compose and env to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "docker-compose.prod.yml"
+          target: "/opt/refuel"
+          strip_components: 0
+
       - name: Copy migrations to server
         uses: appleboy/scp-action@v0.1.7
         with:

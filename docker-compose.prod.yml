@@ -61,11 +61,11 @@ services:
         condition: service_healthy
 
   # ──────────────────────────────────────────
-  # Application services (Go)
+  # Application server
   # ──────────────────────────────────────────
-  gateway:
+  server:
     <<: *service-defaults
-    image: ghcr.io/OWNER/refuel-gateway:${IMAGE_TAG}
+    image: ghcr.io/${REPOSITORY_OWNER:-ikukhar}/refuel-backend:${IMAGE_TAG}
     env_file: .env
     ports:
       - "80:8080"
@@ -77,120 +77,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
-          cpus: "0.5"
+          memory: 512M
+          cpus: "1.0"
         reservations:
-          memory: 128M
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-  auth:
-    <<: *service-defaults
-    image: ghcr.io/OWNER/refuel-auth:${IMAGE_TAG}
-    env_file: .env
-    expose:
-      - "8080"
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-    deploy:
-      resources:
-        limits:
           memory: 256M
-          cpus: "0.5"
-        reservations:
-          memory: 128M
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-  training:
-    <<: *service-defaults
-    image: ghcr.io/OWNER/refuel-training:${IMAGE_TAG}
-    env_file: .env
-    expose:
-      - "8080"
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-          cpus: "0.5"
-        reservations:
-          memory: 128M
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-  nutrition:
-    <<: *service-defaults
-    image: ghcr.io/OWNER/refuel-nutrition:${IMAGE_TAG}
-    env_file: .env
-    expose:
-      - "8080"
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-          cpus: "0.5"
-        reservations:
-          memory: 128M
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-  recipes:
-    <<: *service-defaults
-    image: ghcr.io/OWNER/refuel-recipes:${IMAGE_TAG}
-    env_file: .env
-    expose:
-      - "8080"
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-          cpus: "0.5"
-        reservations:
-          memory: 128M
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-  subscription:
-    <<: *service-defaults
-    image: ghcr.io/OWNER/refuel-subscription:${IMAGE_TAG}
-    env_file: .env
-    expose:
-      - "8080"
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-          cpus: "0.5"
-        reservations:
-          memory: 128M
     depends_on:
       postgres:
         condition: service_healthy
