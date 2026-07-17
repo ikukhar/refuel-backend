@@ -10,8 +10,8 @@ FROM alpine:3.20
 RUN apk --no-cache add ca-certificates
 WORKDIR /app
 COPY --from=builder /server .
-COPY .env.example .env
 COPY migrations ./migrations
+COPY templates ./templates
 
 EXPOSE 8080
 CMD ["./server"]
