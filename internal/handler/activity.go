@@ -112,14 +112,14 @@ func parseDateRange(c *gin.Context) (*time.Time, *time.Time) {
 	if fromStr := c.Query("from"); fromStr != "" {
 		if t, err := time.Parse(time.RFC3339, fromStr); err == nil {
 			from = &t
-		} else if t, err := time.Parse("2006-01-02", fromStr); err == nil {
+		} else if t, err := time.ParseInLocation("2006-01-02", fromStr, time.Local); err == nil {
 			from = &t
 		}
 	}
 	if toStr := c.Query("to"); toStr != "" {
 		if t, err := time.Parse(time.RFC3339, toStr); err == nil {
 			to = &t
-		} else if t, err := time.Parse("2006-01-02", toStr); err == nil {
+		} else if t, err := time.ParseInLocation("2006-01-02", toStr, time.Local); err == nil {
 			t = t.Add(24*time.Hour - time.Nanosecond)
 			to = &t
 		}

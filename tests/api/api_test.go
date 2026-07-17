@@ -451,7 +451,7 @@ func TestListActivities_FilterByFrom(t *testing.T) {
 	s := setupAPI(t)
 	defer s.ctrl.Finish()
 
-	from := time.Date(2026, 7, 10, 0, 0, 0, 0, time.UTC)
+	from := time.Date(2026, 7, 10, 0, 0, 0, 0, time.Local)
 
 	s.mockAct.EXPECT().
 		FindByUserID(uint(1), &from, nil, 20, 0).
@@ -474,7 +474,7 @@ func TestListActivities_FilterByTo(t *testing.T) {
 	s := setupAPI(t)
 	defer s.ctrl.Finish()
 
-	to := time.Date(2026, 7, 15, 23, 59, 59, 999999999, time.UTC)
+	to := time.Date(2026, 7, 15, 23, 59, 59, 999999999, time.Local)
 
 	s.mockAct.EXPECT().
 		FindByUserID(uint(1), nil, &to, 20, 0).
@@ -497,8 +497,8 @@ func TestListActivities_FilterByFromAndTo(t *testing.T) {
 	s := setupAPI(t)
 	defer s.ctrl.Finish()
 
-	from := time.Date(2026, 7, 10, 0, 0, 0, 0, time.UTC)
-	to := time.Date(2026, 7, 15, 23, 59, 59, 999999999, time.UTC)
+	from := time.Date(2026, 7, 10, 0, 0, 0, 0, time.Local)
+	to := time.Date(2026, 7, 15, 23, 59, 59, 999999999, time.Local)
 
 	s.mockAct.EXPECT().
 		FindByUserID(uint(1), &from, &to, 20, 0).
