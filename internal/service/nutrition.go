@@ -163,7 +163,7 @@ func (s *NutritionService) pickRecipesForMeal(mealType model.MealType, targetCal
 }
 
 func mealSlotTime(period model.MealPeriod) string {
-	h := period.StartHour + rng.Intn(2)
+	h := period.StartHour
 	m := period.StartMinute
 	if h > 23 {
 		h = 23
