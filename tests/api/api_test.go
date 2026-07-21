@@ -60,7 +60,7 @@ func setupAPI(t *testing.T) *apiSuite {
 
 	userSvc := service.NewUserService(mockUser, mockMealPeriod)
 	authSvc := service.NewAuthService(mockUser, jwtManager, logger)
-	activitySvc := service.NewActivityService(mockAct)
+	activitySvc := service.NewActivityService(mockAct, mockUser)
 	nutritionSvc := service.NewNutritionService(mockNutr, mockAct, mockUser, mockRecipe, mockMealPeriod)
 	mealPeriodSvc := service.NewMealPeriodService(mockMealPeriod)
 
@@ -429,6 +429,10 @@ func TestListActivities_Success(t *testing.T) {
 	s := setupAPI(t)
 	defer s.ctrl.Finish()
 
+	s.mockUser.EXPECT().
+		FindByID(uint(1)).
+		Return(&model.User{ID: 1}, nil)
+
 	s.mockAct.EXPECT().
 		FindByUserID(uint(1), nil, nil, 20, 0).
 		Return([]model.Activity{
@@ -453,6 +457,10 @@ func TestListActivities_FilterByFrom(t *testing.T) {
 
 	from := time.Date(2026, 7, 10, 0, 0, 0, 0, time.Local)
 
+	s.mockUser.EXPECT().
+		FindByID(uint(1)).
+		Return(&model.User{ID: 1}, nil)
+
 	s.mockAct.EXPECT().
 		FindByUserID(uint(1), &from, nil, 20, 0).
 		Return([]model.Activity{
@@ -475,6 +483,10 @@ func TestListActivities_FilterByTo(t *testing.T) {
 	defer s.ctrl.Finish()
 
 	to := time.Date(2026, 7, 15, 23, 59, 59, 999999999, time.Local)
+
+	s.mockUser.EXPECT().
+		FindByID(uint(1)).
+		Return(&model.User{ID: 1}, nil)
 
 	s.mockAct.EXPECT().
 		FindByUserID(uint(1), nil, &to, 20, 0).
@@ -499,6 +511,10 @@ func TestListActivities_FilterByFromAndTo(t *testing.T) {
 
 	from := time.Date(2026, 7, 10, 0, 0, 0, 0, time.Local)
 	to := time.Date(2026, 7, 15, 23, 59, 59, 999999999, time.Local)
+
+	s.mockUser.EXPECT().
+		FindByID(uint(1)).
+		Return(&model.User{ID: 1}, nil)
 
 	s.mockAct.EXPECT().
 		FindByUserID(uint(1), &from, &to, 20, 0).

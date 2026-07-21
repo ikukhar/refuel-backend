@@ -13,12 +13,18 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
+func newTestActivityService(ctrl *gomock.Controller) (*ActivityService, *mocks.MockActivityRepository, *mocks.MockUserRepository) {
+	mockAct := mocks.NewMockActivityRepository(ctrl)
+	mockUser := mocks.NewMockUserRepository(ctrl)
+	svc := NewActivityService(mockAct, mockUser)
+	return svc, mockAct, mockUser
+}
+
 func TestActivityService_Create_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockActivityRepo := mocks.NewMockActivityRepository(ctrl)
-	svc := NewActivityService(mockActivityRepo)
+	svc, mockActivityRepo, _ := newTestActivityService(ctrl)
 
 	now := time.Now()
 	input := CreateActivityInput{
@@ -58,8 +64,7 @@ func TestActivityService_Create_Idempotency(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockActivityRepo := mocks.NewMockActivityRepository(ctrl)
-	svc := NewActivityService(mockActivityRepo)
+	svc, mockActivityRepo, _ := newTestActivityService(ctrl)
 
 	existing := &model.Activity{
 		ID:     5,
@@ -88,7 +93,7 @@ func TestActivityService_Create_Idempotency(t *testing.T) {
 }
 
 func TestActivityService_Create_MissingSourceID(t *testing.T) {
-	svc := NewActivityService(nil)
+	svc := NewActivityService(nil, nil)
 	input := CreateActivityInput{Type: "run", StartedAt: time.Now()}
 
 	resp, created, err := svc.Create(context.Background(), 1, input)
@@ -100,7 +105,7 @@ func TestActivityService_Create_MissingSourceID(t *testing.T) {
 }
 
 func TestActivityService_Create_InvalidType(t *testing.T) {
-	svc := NewActivityService(nil)
+	svc := NewActivityService(nil, nil)
 
 	input := CreateActivityInput{
 		Type:      "flying",

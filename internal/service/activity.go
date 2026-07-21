@@ -4,17 +4,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/ikukhar/refuel-backend/internal/model"
 )
 
 type ActivityService struct {
-	repo ActivityRepository
+	repo     ActivityRepository
+	userRepo UserRepository
 }
 
-func NewActivityService(repo ActivityRepository) *ActivityService {
-	return &ActivityService{repo: repo}
+func NewActivityService(repo ActivityRepository, userRepo UserRepository) *ActivityService {
+	return &ActivityService{repo: repo, userRepo: userRepo}
 }
 
 type CreateActivityInput struct {
@@ -29,17 +31,18 @@ type CreateActivityInput struct {
 }
 
 type ActivityResponse struct {
-	ID        uint     `json:"id"`
-	UserID    uint     `json:"user_id"`
-	Type      string   `json:"type"`
-	Distance  *float64 `json:"distance"`
-	Duration  *int     `json:"duration"`
-	Elevation *float64 `json:"elevation"`
-	Calories  *int     `json:"calories"`
-	StartedAt string   `json:"started_at"`
-	Source    string   `json:"source"`
-	SourceID  string   `json:"source_id"`
-	CreatedAt string   `json:"created_at"`
+	ID          uint     `json:"id"`
+	UserID      uint     `json:"user_id"`
+	Type        string   `json:"type"`
+	Distance    *float64 `json:"distance"`
+	Duration    *int     `json:"duration"`
+	Elevation   *float64 `json:"elevation"`
+	Calories    *int     `json:"calories"`
+	CaloriesBMR *float64 `json:"calories_bmr"`
+	StartedAt   string   `json:"started_at"`
+	Source      string   `json:"source"`
+	SourceID    string   `json:"source_id"`
+	CreatedAt   string   `json:"created_at"`
 }
 
 func (s *ActivityService) Create(ctx context.Context, userID uint, input CreateActivityInput) (*ActivityResponse, bool, error) {
@@ -98,6 +101,19 @@ func (s *ActivityService) List(ctx context.Context, userID uint, from, to *time.
 	for i, a := range activities {
 		resp[i] = *toActivityResponse(&a)
 	}
+
+	user, err := s.userRepo.FindByID(userID)
+	if err == nil && user.Weight > 0 && user.Height > 0 && user.Age > 0 && user.Gender != "" {
+		bmrPerDay := calcBMR(user.Weight, user.Height, user.Age, user.Gender)
+		bmrPerSecond := bmrPerDay / 86400
+		for i := range resp {
+			if resp[i].Duration != nil {
+				val := math.Round(bmrPerSecond*float64(*resp[i].Duration)*100) / 100
+				resp[i].CaloriesBMR = &val
+			}
+		}
+	}
+
 	return resp, nil
 }
 

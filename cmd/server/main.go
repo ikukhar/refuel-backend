@@ -67,7 +67,7 @@ func main() {
 
 	authService := service.NewAuthService(userRepo, jwtManager, logger)
 	userService := service.NewUserService(userRepo, userMealPeriodsRepo)
-	activityService := service.NewActivityService(activityRepo)
+	activityService := service.NewActivityService(activityRepo, userRepo)
 	nutritionService := service.NewNutritionService(nutritionRepo, activityRepo, userRepo, recipeRepo, userMealPeriodsRepo)
 	mealPeriodService := service.NewMealPeriodService(userMealPeriodsRepo)
 
