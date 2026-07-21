@@ -38,7 +38,7 @@ type ActivityResponse struct {
 	Duration    *int     `json:"duration"`
 	Elevation   *float64 `json:"elevation"`
 	Calories    *int     `json:"calories"`
-	CaloriesBMR *float64 `json:"calories_bmr"`
+	CaloriesBMR *int `json:"calories_bmr"`
 	StartedAt   string   `json:"started_at"`
 	Source      string   `json:"source"`
 	SourceID    string   `json:"source_id"`
@@ -108,7 +108,7 @@ func (s *ActivityService) List(ctx context.Context, userID uint, from, to *time.
 		bmrPerSecond := bmrPerDay / 86400
 		for i := range resp {
 			if resp[i].Duration != nil {
-				val := math.Round(bmrPerSecond*float64(*resp[i].Duration)*100) / 100
+				val := int(math.Round(bmrPerSecond * float64(*resp[i].Duration)))
 				resp[i].CaloriesBMR = &val
 			}
 		}
