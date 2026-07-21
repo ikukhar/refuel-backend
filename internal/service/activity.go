@@ -38,7 +38,7 @@ type ActivityResponse struct {
 	Duration    *int     `json:"duration"`
 	Elevation   *float64 `json:"elevation"`
 	Calories    *int     `json:"calories"`
-	CaloriesBMR *int `json:"calories_bmr"`
+	CaloriesBMR *int     `json:"calories_bmr"`
 	StartedAt   string   `json:"started_at"`
 	Source      string   `json:"source"`
 	SourceID    string   `json:"source_id"`
